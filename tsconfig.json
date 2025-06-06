@@ -1,0 +1,13 @@
+//NodeJS
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "outDir": "dist", //optionally use “” to not use an output folder
+        "sourceMap": true,
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "moduleResolution": "nodenext",
+        "module": "NodeNext"
+    },
+    "include": ["Pokemon TCG/src/**/*.ts", "Pokemon TCG/src/components/**/*.ts", "Pokemon TCG/src/components/assets/**/*.ts"]
+}
