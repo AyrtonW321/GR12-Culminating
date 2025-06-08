@@ -269,7 +269,7 @@ export class PokemonCard {
     private static nonStackableStatuses = new Set([
         "ASLEEP",
         "PARALYZED",
-        "CONFUSED",
+        "CONFUSED"
     ]);
 
     public applyStatusCondition(condition: string): void {
@@ -308,8 +308,6 @@ export class PokemonCard {
             this._activeStatus.statuses.add(condition);
             return;
         }
-
-        // For any other conditions not recognized, just add once
         this._activeStatus.statuses.add(condition);
     }
 

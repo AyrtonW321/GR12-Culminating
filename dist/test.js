@@ -47,4 +47,5 @@ let booster = user.openBoosterPack();
 booster.forEach(pokemon => {
     console.log(pokemon.pokemonName);
 });
+console.log(user.collection);
 //# sourceMappingURL=test.js.map

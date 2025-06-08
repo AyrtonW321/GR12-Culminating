@@ -9,7 +9,6 @@ export class Attack {
         this._coinflipCount = coinflipCount;
         this._coinflipMulti = coinflipMulti;
     }
-    // Getters
     get Name() {
         return this._name;
     }

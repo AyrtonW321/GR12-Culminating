@@ -30,7 +30,6 @@ export abstract class Attack {
         this._coinflipMulti = coinflipMulti;
     }
 
-    // Getters
     get Name(): string {
         return this._name;
     }

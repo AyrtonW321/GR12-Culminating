@@ -205,7 +205,6 @@ export class PokemonCard {
             this._activeStatus.statuses.add(condition);
             return;
         }
-        // For any other conditions not recognized, just add once
         this._activeStatus.statuses.add(condition);
     }
     clearStatusCondition(condition) {
@@ -260,6 +259,6 @@ export class PokemonCard {
 PokemonCard.nonStackableStatuses = new Set([
     "ASLEEP",
     "PARALYZED",
-    "CONFUSED",
+    "CONFUSED"
 ]);
 //# sourceMappingURL=PokemonCardsClass.js.map
