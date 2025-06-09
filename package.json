@@ -3,4 +3,26 @@
     "react-router-dom": "^7.6.1",
     "typescript": "^5.8.3"
   }
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "react-router-dom": "^7.6.1"
+  },
+  "name": "gr12-culminating",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AyrtonW321/GR12-Culminating.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AyrtonW321/GR12-Culminating/issues"
+  },
+  "homepage": "https://github.com/AyrtonW321/GR12-Culminating#readme"
 }

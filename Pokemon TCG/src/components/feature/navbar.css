@@ -1,0 +1,120 @@
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 10px 0;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navContainer {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    min-height: 50px;
+}
+
+.navBar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-left: 50px;
+}
+
+.navBar a {
+    color: #333;
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: color 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navBar a:hover {
+    color: #f34013;
+    background-color: rgba(255, 47, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.navBar a:active {
+    transform: translateY(0);
+}
+
+.settingsBtn {
+    background-color: #f34013;
+    color: #ffffff;
+    border: none;
+    padding: 12px 15px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(255, 47, 0, 0.2);
+    margin-left: auto;
+}
+
+.settingsBtn:hover {
+    background-color: #f34013;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 47, 0, 0.3);
+}
+
+.settingsBtn:active {
+    background-color: #f34013;
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(255, 47, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+    .navContainer {
+        grid-template-columns: 1fr auto;
+        padding: 0 15px;
+        gap: 15px;
+    }
+
+    .navBar {
+        grid-column: 1 / -1;
+        justify-content: space-around;
+        margin-left: 0;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    .navBar a {
+        font-size: 1.3rem;
+        padding: 8px 12px;
+    }
+
+    .settingsBtn {
+        padding: 10px 12px;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navBar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navBar a {
+        padding: 10px;
+        text-align: center;
+    }
+}
