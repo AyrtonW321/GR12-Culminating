@@ -1,0 +1,317 @@
+/* Base styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+}
+
+/* Container styles */
+.container {
+    position: relative;
+    width: 420px;
+    height: 450px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    transition: height 0.3s ease;
+    margin: 50px auto;
+}
+
+.container.active {
+    height: 520px;
+}
+
+/* Form box styles */
+.container .formBox {
+    position: absolute;
+    width: 100%;
+    padding: 40px;
+    transition: transform 0.3s ease;
+}
+
+.container .formBox.login {
+    transform: translateX(0);
+}
+
+.container.active .formBox.login {
+    transform: translateX(-400px);
+}
+
+.container .formBox.register {
+    transform: translateX(400px);
+}
+
+.container.active .formBox.register {
+    transform: translateX(0);
+}
+
+/* Form header */
+form h1 {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Input box styles */
+.inputBox, .inputBox2 {
+    position: relative;
+    width: 100%;
+    margin: 25px 0;
+}
+
+.inputBox input, .inputBox2 input {
+    width: 100%;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    font-size: 16px;
+    color: #fff;
+    padding: 0 20px 0 45px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.inputBox input:focus, .inputBox2 input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.inputBox input::placeholder, .inputBox2 input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Icons */
+.inputBox .icon, .inputBox2 .icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Password toggle button */
+.inputBox button[type="button"] {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+}
+
+/* Checkbox and remember me */
+.rememberForgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    margin: 15px 0;
+}
+
+.rememberForgot label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.rememberForgot label input {
+    margin-right: 5px;
+    accent-color: #fff;
+}
+
+.rememberForgot a {
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.rememberForgot a:hover {
+    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Submit button */
+.submit {
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(63deg, rgba(16, 59, 231, 0.8) 0%, rgba(100, 233, 255, 0.8) 100%);
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Register link */
+.register {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 15px;
+}
+
+.register p a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.register p a:hover {
+    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Account Container */
+.accountContainer {
+    position: relative;
+    width: 80%;
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #fff;
+}
+
+.accountContainer h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.accountContainer h2 {
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.accountContainer hr {
+    border: none;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 25px 0;
+}
+
+/* Account info */
+.accountInfo {
+    margin-bottom: 30px;
+}
+
+.accountInfo label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.inputBox2 {
+    margin-bottom: 20px;
+}
+
+.inputBox2 input {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+}
+
+/* Upcoming trips */
+.upcomingTrip {
+    margin-bottom: 30px;
+}
+
+.checkDestination {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.checkDestination img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.checkDestination h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.information {
+    width: 100%;
+    text-align: center;
+}
+
+.information p {
+    margin: 8px 0;
+}
+
+/* Buttons */
+.accountContainer button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 5px;
+}
+
+.accountSignOut button {
+    background: linear-gradient(63deg, rgba(16, 59, 231, 0.8) 0%, rgba(100, 233, 255, 0.8) 100%);
+    color: #fff;
+}
+
+.accountDelete button {
+    background: rgba(255, 0, 0, 0.7);
+    color: #fff;
+}
+
+.accountContainer button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.accountSignOut button:hover {
+    background: linear-gradient(63deg, rgba(16, 59, 231, 1) 0%, rgba(100, 233, 255, 1) 100%);
+}
+
+.accountDelete button:hover {
+    background: rgba(255, 0, 0, 0.9);
+}
+
+/* Button container */
+.accountSignOut, .accountDelete {
+    text-align: center;
+    margin-top: 20px;
+}

@@ -1,13 +1,22 @@
 import { Link } from 'react-router-dom';
 import './NavBar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear, faHouse, faBurst, faClone, faStore } from '@fortawesome/free-solid-svg-icons';
+import { faGear, faHouse, faBurst, faClone, faStore, faUser } from '@fortawesome/free-solid-svg-icons';
+
 
 interface NavBarProps {
     onSettingsClick: () => void;
+    isLoggedIn: boolean;
+    setIsLoggedIn: (value: boolean) => void;
+    handleSignOut: () => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ onSettingsClick }) => {
+const NavBar: React.FC<NavBarProps> = ({ 
+    onSettingsClick, 
+    isLoggedIn, 
+    setIsLoggedIn, 
+    handleSignOut 
+}) => {
     return (
         <header id="header">
             <div className="navContainer">
@@ -18,7 +27,7 @@ const NavBar: React.FC<NavBarProps> = ({ onSettingsClick }) => {
                     <Link to="/" aria-label="Home">
                         <FontAwesomeIcon icon={faHouse} />
                     </Link>
-                    <Link to="/Collaction" aria-label="Collection">
+                    <Link to="/Collection" aria-label="Collection">
                         <FontAwesomeIcon icon={faClone} />
                     </Link>
                     <Link to="/Battle" aria-label="Battle">
@@ -26,6 +35,9 @@ const NavBar: React.FC<NavBarProps> = ({ onSettingsClick }) => {
                     </Link>
                     <Link to="/Store" aria-label="Store">
                         <FontAwesomeIcon icon={faStore}/>
+                    </Link>
+                    <Link to="/Profile" aria-label="Profile">
+                        <FontAwesomeIcon icon={faUser}/>
                     </Link>
                 </nav>
                 <button
