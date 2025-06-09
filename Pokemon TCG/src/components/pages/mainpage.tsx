@@ -24,6 +24,7 @@ const MainPage = () => {
         </div>
 
         <button 
+            type='button'
           className={`open-pack-button ${isOpening ? 'opening' : ''}`}
           onClick={handleOpenPack}
           disabled={isOpening}
