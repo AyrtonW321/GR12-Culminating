@@ -118,3 +118,15 @@ header {
         text-align: center;
     }
 }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.username {
+    font-size: 14px;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+}

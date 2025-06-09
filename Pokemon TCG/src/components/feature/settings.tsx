@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { User } from "../assets/UserClass";
 import './settings.css';
 
 interface SettingsProps {
     closeModal: () => void;
+    onCreateNewUser: () => void;
+    currentUser: User | null;
 }
 
 interface FormData {
@@ -13,9 +16,9 @@ interface FormData {
     diet: string;
 }
 
-const Settings = ({ closeModal }: SettingsProps) => {
+const Settings = ({ closeModal, onCreateNewUser, currentUser }: SettingsProps) => {
     const [formData, setFormData] = useState<FormData>({
-        username: '',
+        username: currentUser?.username || '',
         allergies: '',
         preferredCuisine: '',
         spice: '',
@@ -32,37 +35,49 @@ const Settings = ({ closeModal }: SettingsProps) => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log('User settings saved:', formData);
+        if (currentUser) {
+            currentUser.updateProfile(formData.username);
+        }
         closeModal();
     };
 
-    return (
-        <div className="modalOverlay" onClick={closeModal}>
-            <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-                <h1>User Settings</h1>
-                <form onSubmit={handleSubmit} className='userSettingsContainer'>
-                    <div className='textInputContainer'>
-                        <label htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            placeholder="Enter your username"
-                            autoComplete='off'
-                        />
-                    </div>
+return (
+    <div className="modalOverlay" onClick={closeModal}>
+        <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+            <h1>User Settings</h1>
+            <form onSubmit={handleSubmit} className='userSettingsContainer'>
+                <div className='textInputContainer'>
+                    <label htmlFor="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        placeholder="Enter your username"
+                        autoComplete='off'
+                    />
+                </div>
 
-                    <div className='buttonContainer'>
-                        <button type="submit" className="saveButton">
-                            Save Settings
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div className='buttonsRow'>
+                    <button type="submit" className="saveButton">
+                        Save Settings
+                    </button>
+                    <button 
+                        className="createUserButton"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            closeModal();
+                            onCreateNewUser();
+                        }}
+                    >
+                        Create New User
+                    </button>
+                </div>
+            </form>
         </div>
-    );
+    </div>
+);
 };
 
 export default Settings;

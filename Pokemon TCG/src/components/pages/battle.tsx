@@ -1,10 +1,16 @@
-import './battle.css';
+import "./battle.css";
+import { User } from '../assets/UserClass';
 
-const Battle = () => {
+interface BattleProps {
+    currentUser: User | null;
+}
 
+const Battle = ({ currentUser }: BattleProps) => {
     return (
-        <>
-        </>
+        <div className="battle-container">
+            {currentUser && <h1>Battle Mode - {currentUser.username}</h1>}
+            {/* Add your battle content here */}
+        </div>
     );
 };
 

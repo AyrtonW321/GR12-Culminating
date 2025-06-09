@@ -1,4 +1,5 @@
 import './collection.css';
+import { User } from "../assets/UserClass.js"
 
 const Collection = () => {
 

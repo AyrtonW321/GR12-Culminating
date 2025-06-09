@@ -1,0 +1,47 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+}
+
+.inputGroup {
+    margin-bottom: 15px;
+}
+
+.inputGroup label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.inputGroup input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.submitButton {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submitButton:hover {
+    background-color: #45a049;
+}
