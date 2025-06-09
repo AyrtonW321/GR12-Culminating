@@ -199,7 +199,8 @@ export class PokemonCard {
 
     public attachEnergy(energyType: string, amount: number): void {
         const index = this._attachedEnergyType.indexOf(energyType);
-        if (index !== -1) {
+
+        if (index >= 0) {
             this._attachedEnergyAmount[index] += amount;
         } else {
             this._attachedEnergyType.push(energyType);
@@ -269,7 +270,7 @@ export class PokemonCard {
     private static nonStackableStatuses = new Set([
         "ASLEEP",
         "PARALYZED",
-        "CONFUSED"
+        "CONFUSED",
     ]);
 
     public applyStatusCondition(condition: string): void {

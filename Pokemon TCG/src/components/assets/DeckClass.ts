@@ -98,4 +98,28 @@ export class Deck {
             })
         );
     }
+
+    // the deck you play with is a copy of the deck you created, so it dosent influence the original deck
+    public clone(): Deck {
+        const newDeck = new Deck(this.name);
+
+        const cardsArray = Array.from(this._pokemonCards.entries());
+        for (let i = 0; i < cardsArray.length; i++) {
+            const [card, count] = cardsArray[i];
+            newDeck._pokemonCards.set(card, count);
+        }
+
+        const energyTypesArray = Array.from(this._selectedEnergyTypes);
+        for (let i = 0; i < energyTypesArray.length; i++) {
+            newDeck._selectedEnergyTypes.add(energyTypesArray[i]);
+        }
+
+        return newDeck;
+    }
+
+    // function to deleat the deck after the battle is over
+    public discard(): void {
+        this._pokemonCards.clear();
+        this._selectedEnergyTypes.clear();
+    }
 }

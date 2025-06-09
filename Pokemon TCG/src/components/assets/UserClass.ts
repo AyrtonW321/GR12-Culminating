@@ -22,9 +22,7 @@ import { UserStats } from "./UserStatsClass.js";
 import { GameRecord } from "./GameRecordClass.js";
 import { Attack } from "./AttacksClass.js";
 
-type EnergyType = string;
-
-const allCards: PokemonCard[] = [
+const ALL_CARDS: PokemonCard[] = [
     new CharmanderCard(),
     new CharmeleonCard(),
     new CharizardCard(),
@@ -39,6 +37,8 @@ const allCards: PokemonCard[] = [
     new BlastoiseEXCard(),
 ];
 
+const HOURGLASS_COST = 12;
+
 export class User {
     private _username: string;
     private _collection: Map<PokemonCard, number>;
@@ -47,12 +47,16 @@ export class User {
     private _gameStats: UserStats;
     private _winRate: number;
     private _gameHistory: GameRecord[];
-    
-    private _activeDeckId: string;
+
+    private _activeDeckName: string | null = null;
+    private _activeDeck: Deck | null = null;
+    private _activeCard: PokemonCard;
     private _bench: PokemonCard[];
     private _hand: PokemonCard[];
     private _discardPile: PokemonCard[];
     private _currentPoints: number;
+
+    private _hourglasses: number;
 
     constructor(username: string) {
         this._username = username;
@@ -72,12 +76,47 @@ export class User {
         return this._decks;
     }
 
-    get activeDeckId(): string {
-        return this._activeDeckId;
+    get activeDeckName(): string | null {
+        return this._activeDeckName;
     }
 
-    set activeDeckId(id: string) {
-        this._activeDeckId = id;
+    set activeDeckName(name: string | null) {
+        this._activeDeckName = name;
+
+        if (name === null) {
+            this._activeDeck = null;
+            return;
+        }
+
+        const foundDeck = this._decks.find((deck) => deck.name === name);
+        if (foundDeck) {
+            this._activeDeck = foundDeck.clone();
+        } else {
+            console.log(`Deck named "${name}" not found.`);
+            this._activeDeck = null;
+        }
+    }
+
+    get activeDeck(): Deck | null {
+        return this._activeDeck;
+    }
+
+    set activeDeck(deck: Deck | null) {
+        if (deck === null) {
+            this._activeDeck = null;
+            this._activeDeckName = null;
+        } else {
+            this._activeDeck = deck;
+            this._activeDeckName = deck.name;
+        }
+    }
+
+    get activeCard(): PokemonCard {
+        return this._activeCard;
+    }
+
+    set activeCard(card: PokemonCard) {
+        this._activeCard = card;
     }
 
     get victories(): number {
@@ -123,7 +162,9 @@ export class User {
     public openBoosterPack(cardsToOpen: number = 5): PokemonCard[] {
         const cardsByRarity: Record<number, PokemonCard[]> = {};
         for (let rarity = 1; rarity <= 8; rarity++) {
-            cardsByRarity[rarity] = allCards.filter((card) => card.Rarity === rarity);
+            cardsByRarity[rarity] = ALL_CARDS.filter(
+                (card) => card.Rarity === rarity
+            );
         }
 
         // <order of card in pack, <rarity, drop rate in %>>
@@ -175,7 +216,8 @@ export class User {
             const filteredKeys = Object.keys(filteredRates);
             for (let i = 0; i < filteredKeys.length; i++) {
                 const dropRate = parseInt(filteredKeys[i]);
-                filteredRates[dropRate] = (filteredRates[dropRate] / totalRate) * 100;
+                filteredRates[dropRate] =
+                    (filteredRates[dropRate] / totalRate) * 100;
             }
             return filteredRates;
         }
@@ -459,7 +501,7 @@ export class User {
         return true;
     }
 
-    public drawCard(): PokemonCard {
+    public drawCard(amt: number): PokemonCard {
         // To be implemented
         return {} as PokemonCard;
     }
@@ -469,9 +511,42 @@ export class User {
         return false;
     }
 
-    public attachEnergy(pokemon: PokemonCard, energy: EnergyType): boolean {
-        // To be implemented
-        return false;
+    public checkForDiscard(): PokemonCard[] {
+        const discardedCards: PokemonCard[] = [];
+
+        if (this._activeCard && this._activeCard.CurrentHP === 0) {
+            discardedCards.push(this._activeCard);
+            this._discardPile.push(this._activeCard);
+            this._activeCard = undefined as unknown as PokemonCard;
+        }
+
+        const survivingBench: PokemonCard[] = [];
+        for (let i = 0; i < this._bench.length; i++) {
+            const card = this._bench[i];
+            if (card.CurrentHP === 0) {
+                discardedCards.push(card);
+                this._discardPile.push(card);
+            } else {
+                survivingBench.push(card);
+            }
+        }
+
+        this._bench = survivingBench;
+
+        return discardedCards;
+    }
+
+    public attachEnergy(
+        pokemon: PokemonCard,
+        energy: string,
+        amount: number = 1
+    ): boolean {
+        const inPlay =
+            this._activeCard === pokemon || this._bench.includes(pokemon);
+        if (!inPlay) return false;
+
+        pokemon.attachEnergy(energy, amount);
+        return true;
     }
 
     public attack(
@@ -493,14 +568,32 @@ export class User {
         return false;
     }
 
-    public endGame(player1: User, player2: User): {winner?: string, endGame: boolean} {
-        if (player1._currentPoints === 3){
-            return {winner: player1._username, endGame: true}
+    public endGame(
+        player1: User,
+        player2: User
+    ): { winner?: string; endGame: boolean } {
+        if (player1._currentPoints === 3) {
+            player1.gameStats.addWin();
+            player2.gameStats.addLoss();
+            player1.discardActiveDeck();
+            player2.discardActiveDeck();
+
+            return { winner: player1._username, endGame: true };
         }
-        if (player2._currentPoints === 3){
-            return {winner: player2._username, endGame: true}
+        if (player2._currentPoints === 3) {
+            player1.gameStats.addWin();
+            player2.gameStats.addLoss();
+            player1.discardActiveDeck();
+            player2.discardActiveDeck();
+
+            return { winner: player2._username, endGame: true };
         }
-        return {endGame: false}
+        return { endGame: false };
+    }
+
+    public discardActiveDeck() {
+        this._activeDeck = null;
+        this._activeDeckName = null;
     }
 
     public updateProfile(newUsername: string): boolean {
@@ -512,5 +605,18 @@ export class User {
         this._username = newUsername;
         console.log(`Username changed to ${newUsername}`);
         return true;
+    }
+
+    public openPackUsingHourglass(): PokemonCard[] | null {
+        if (this._hourglasses < HOURGLASS_COST) {
+            return null;
+        }
+        this._hourglasses -= HOURGLASS_COST;
+        return this.openBoosterPack();
+    }
+
+    public addHourglass(amt: number) {
+        this._hourglasses += amt;
+        return this._hourglasses;
     }
 }
