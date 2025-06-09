@@ -619,4 +619,4 @@ export class User {
         this._hourglasses += amt;
         return this._hourglasses;
     }
-}
+}   
