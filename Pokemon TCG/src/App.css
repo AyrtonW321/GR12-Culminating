@@ -8,9 +8,6 @@
 
 body {
   font-family: 'Open Sans', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
   background-color: #dedede;
   color: #333;
@@ -22,4 +19,5 @@ body {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  min-height: 100vh;
 }

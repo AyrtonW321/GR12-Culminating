@@ -3,19 +3,26 @@ import './NavBar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear, faHouse, faBurst, faClone, faStore, faUser } from '@fortawesome/free-solid-svg-icons';
 
+interface UserData {
+    username: string;
+    email: string;
+    password: string;
+}
 
 interface NavBarProps {
     onSettingsClick: () => void;
     isLoggedIn: boolean;
     setIsLoggedIn: (value: boolean) => void;
     handleSignOut: () => void;
+    userData: UserData;
 }
 
 const NavBar: React.FC<NavBarProps> = ({ 
     onSettingsClick, 
     isLoggedIn, 
     setIsLoggedIn, 
-    handleSignOut 
+    handleSignOut,
+    userData
 }) => {
     return (
         <header id="header">
@@ -40,15 +47,18 @@ const NavBar: React.FC<NavBarProps> = ({
                         <FontAwesomeIcon icon={faUser}/>
                     </Link>
                 </nav>
-                <button
-                    type="button"
-                    onClick={onSettingsClick}
-                    className="settingsBtn"
-                    aria-label="Open settings"
-                    title="Open settings"
-                >
-                    <FontAwesomeIcon icon={faGear} />
-                </button>
+                <div className="userSection">
+                    <span className="welcomeText">Welcome, {userData.username}</span>
+                    <button
+                        type="button"
+                        onClick={onSettingsClick}
+                        className="settingsBtn"
+                        aria-label="Open settings"
+                        title="Open settings"
+                    >
+                        <FontAwesomeIcon icon={faGear} />
+                    </button>
+                </div>
             </div>
         </header>
     );

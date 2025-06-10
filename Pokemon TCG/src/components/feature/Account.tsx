@@ -8,7 +8,6 @@ interface UserData {
     password: string;
 }
 
-
 interface AccountProps {
     userData: UserData;
     setIsLoggedIn: (value: boolean) => void;
@@ -17,7 +16,6 @@ interface AccountProps {
 
 const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData }) => {
     const navigate = useNavigate();
-
 
     const handleSignOut = () => { 
         setIsLoggedIn(false);
@@ -65,15 +63,15 @@ const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData 
                 <h2>Personal Information</h2>
                 <label htmlFor='enteredUsername'>Username: </label>
                 <div className='inputBox2 userUsername'>
-                    <input className='enteredUsername' value={userData.username} disabled />
+                    <input className='enteredUsername' title="Username" value={userData.username} disabled />
                 </div>
                 <label htmlFor='enteredEmail'>Email: </label>
                 <div className='inputBox2 userEmail'>
-                    <input className='enteredEmail' value={userData.email} disabled />
+                    <input className='enteredEmail' title="Email" value={userData.email} disabled />
                 </div>
                 <label htmlFor='enteredPassword'>Password: </label>
                 <div className='inputBox2 userPassword'>
-                    <input className='enteredPassword' value={userData.password} type="password" disabled />
+                    <input className='enteredPassword' title="Password" value={userData.password} type="password" disabled />
                 </div>
             </div>
             <hr />

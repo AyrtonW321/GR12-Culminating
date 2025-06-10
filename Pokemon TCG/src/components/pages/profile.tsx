@@ -2,36 +2,55 @@ import { useState, useEffect } from 'react';
 import { UserStats } from '../assets/UserStatsClass';
 import './profile.css';
 
-const Profile = () => {
-    const [username, setUsername] = useState<string>('PokemonTrainer');
+interface UserData {
+    username: string;
+    email: string;
+    password: string;
+}
+
+interface ProfileProps {
+    userData?: UserData;
+}
+
+const Profile = ({ userData }: ProfileProps) => {
+    const [displayName, setDisplayName] = useState<string>('PokemonTrainer');
     const [userStats, setUserStats] = useState<UserStats>(new UserStats());
     const [collectedCards, setCollectedCards] = useState<number>(0);
     const [profileImage, setProfileImage] = useState<string>('/default-pfp.png');
-    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [email, setEmail] = useState<string>('');
 
-    // Load user data (in a real app, this would come from an API)
     useEffect(() => {
-        // Simulate loading user data
-        const loadedStats = new UserStats(1, 1, 1);
-        setUserStats(loadedStats);
-        setCollectedCards(0);
-    }, []);
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                if (event.target?.result) {
-                    setProfileImage(event.target.result as string);
-                }
-            };
-            reader.readAsDataURL(e.target.files[0]);
+        if (userData) {
+            const storedDisplayName = localStorage.getItem(`displayName_${userData.username}`) || userData.username;
+            const storedProfileImage = localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png';
+            const storedEmail = localStorage.getItem(`userEmail_${userData.username}`) || userData.email;
+            const storedStats = localStorage.getItem(`userStats_${userData.username}`);
+            const storedCards = localStorage.getItem(`collectedCards_${userData.username}`);
+            
+            setDisplayName(storedDisplayName);
+            setProfileImage(storedProfileImage);
+            setEmail(storedEmail);
+            setCollectedCards(storedCards ? parseInt(storedCards) : 0);
+            
+            if (storedStats) {
+                const stats = JSON.parse(storedStats);
+                setUserStats(new UserStats(stats.wins, stats.losses, stats.currentStreak));
+            } else {
+                const loadedStats = new UserStats(1, 1, 1);
+                setUserStats(loadedStats);
+            }
         }
-    };
+    }, [userData]);
 
-    const saveUsername = () => {
-        setIsEditing(false);
-        // In a real app, you would save to your backend here
+    const saveStatsToStorage = () => {
+        if (userData) {
+            localStorage.setItem(`userStats_${userData.username}`, JSON.stringify({
+                wins: userStats.wins,
+                losses: userStats.losses,
+                currentStreak: userStats.currentStreak
+            }));
+            localStorage.setItem(`collectedCards_${userData.username}`, collectedCards.toString());
+        }
     };
 
     return (
@@ -43,41 +62,13 @@ const Profile = () => {
                         alt="Profile" 
                         className="profile-image"
                     />
-                    <label className="change-pfp-button">
-                        Change
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleImageChange}
-                            style={{ display: 'none' }}
-                        />
-                    </label>
                 </div>
 
                 <div className="username-section">
-                    {isEditing ? (
-                        <div className="username-edit">
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="username-input"
-                            />
-                            <button onClick={saveUsername} className="save-button">
-                                Save
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="username-display">
-                            <h2>{username}</h2>
-                            <button 
-                                onClick={() => setIsEditing(true)} 
-                                className="edit-button"
-                            >
-                                Edit
-                            </button>
-                        </div>
-                    )}
+                    <div className="username-display">
+                        <h2>{displayName}</h2>
+                        <p className="user-email">{email}</p>
+                    </div>
                 </div>
             </div>
 
