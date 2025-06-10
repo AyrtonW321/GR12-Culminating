@@ -1,28 +1,4 @@
-.settingsIconBtn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: black;
-  margin: 10px;
-}
-
-.logoContainer {
-  justify-self: start;
-  width: 25%;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  gap: 12px;
-}
-
-.logo {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  display: block;
-}
-
+/* Settings Modal Styles */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -38,22 +14,22 @@
 
 .modalContent {
   width: 100%;
-  max-width: 450px; 
+  max-width: 450px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  padding: 15px; 
+  padding: 15px;
   position: relative;
 }
 
 .modalContent h1 {
-  font-size: 1.5rem; 
+  font-size: 1.5rem;
   letter-spacing: 1px;
-  color: #2b2b2b; 
+  color: #2b2b2b;
   position: relative;
   z-index: 3;
   opacity: 1;
-  margin-bottom: 15px; 
+  margin-bottom: 15px;
   text-align: center;
 }
 
@@ -79,7 +55,7 @@
 
 .textInputContainer input {
   width: 100%;
-  padding: 8px; 
+  padding: 8px;
   color: black;
   background-color: #e2e2e2;
   border: 1px solid #ccc;
@@ -87,42 +63,78 @@
   font-size: 0.9rem;
 }
 
-.inputBoxContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.inputBox {
-  width: 100%;
-}
-
-.inputBox label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px; 
-  color: #2b2b2b;
-  font-size: 0.9rem;
-}
-
 .buttonContainer {
   margin-top: 12px;
   display: flex;
   justify-content: center;
+  gap: 10px;
 }
 
 .saveButton {
   padding: 8px 16px;
   border: none;
-  background-color: #f34013;
-  color: rgb(0, 0, 0);
+  background-color: #ff0000;
+  color: white;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font-size: 0.9rem; 
+  font-size: 0.9rem;
 }
 
 .saveButton:hover {
-  background-color: #d43811;
+  background-color: #cc0000;
+}
+
+.accountButton {
+  padding: 8px 16px;
+  border: none;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.accountButton:hover {
+  background-color: #555;
+}
+
+/* Profile Image Styles for Settings */
+.profileImageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.pfp-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-preview-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ff0000;
+}
+
+.change-pfp-button {
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.change-pfp-button:hover {
+  background-color: #ff3333;
+  transform: scale(1.05);
 }

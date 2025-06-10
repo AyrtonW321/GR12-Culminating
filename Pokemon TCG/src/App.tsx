@@ -6,6 +6,7 @@ import Collection from './components/pages/collection';
 import Battle from './components/pages/battle';
 import Profile from './components/pages/profile';
 import NavBar from './components/feature/navbar';
+import Store from './components/pages/store';
 import Settings from './components/feature/settings';
 import Login from './components/feature/Login';
 import Account from './components/feature/Account';
@@ -69,7 +70,7 @@ function App() {
                 <Route path="/" element={<MainPage />} />
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/battle" element={<Battle />} />
-                <Route path="/store" element={<MainPage />} />
+                <Route path="/store" element={<Store />} />
                 <Route path="/profile" element={<Profile userData={userData} />} />
                 <Route 
                     path="/account" 

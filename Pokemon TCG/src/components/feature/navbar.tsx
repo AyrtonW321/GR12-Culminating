@@ -48,7 +48,6 @@ const NavBar: React.FC<NavBarProps> = ({
                     </Link>
                 </nav>
                 <div className="userSection">
-                    <span className="welcomeText">Welcome, {userData.username}</span>
                     <button
                         type="button"
                         onClick={onSettingsClick}
