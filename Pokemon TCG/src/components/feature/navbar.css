@@ -8,6 +8,7 @@ header {
     z-index: 1000;
     padding: 10px 0;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(255, 29, 29, 0.842);
 }
 
 .navContainer {
@@ -71,6 +72,54 @@ header {
   display: block;
   margin: 0;
 }
+
+.userSection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hourglassDisplay {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(243, 64, 19, 0.1);
+    border: 2px solid #f34013;
+    color: #f34013;
+    padding: 6px 12px;
+    border-radius: 50px;
+    cursor: default;
+    transition: background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 40px;
+}
+
+.hourglassDisplay:hover::after {
+    content: "Hourglasses";
+    position: absolute;
+    left: 100%;
+    margin-left: 10px;
+    background: #f34013;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.hourglassDisplay img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.hourglassCount {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
 
 .settingsBtn {
     background-color: #f34013;

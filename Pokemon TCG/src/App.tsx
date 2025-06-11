@@ -21,6 +21,7 @@ function App() {
     const [showSettings, setShowSettings] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState<UserData>({ username: '', email: '', password: '' });
+    const [hourglassCount, setHourglassCount] = useState<number>(0);
 
     const handleSignOut = () => {
         setIsLoggedIn(false);
@@ -28,11 +29,21 @@ function App() {
         localStorage.removeItem('loggedInUser');
     };
 
+    const handleHourglassUpdate = (newAmount: number) => {
+        setHourglassCount(newAmount);
+    };
+
     useEffect(() => {
         const storedUser = localStorage.getItem('loggedInUser');
         if (storedUser) {
             setIsLoggedIn(true);
             setUserData(JSON.parse(storedUser));
+        }
+
+        // Load hourglass count from localStorage
+        const savedHourglasses = localStorage.getItem('userHourglasses');
+        if (savedHourglasses) {
+            setHourglassCount(parseInt(savedHourglasses));
         }
     }, []);
 
@@ -58,6 +69,7 @@ function App() {
                 setIsLoggedIn={setIsLoggedIn} 
                 handleSignOut={handleSignOut}
                 userData={userData}
+                hourglassCount={hourglassCount}
             />
             {showSettings && (
                 <Settings 
@@ -70,7 +82,10 @@ function App() {
                 <Route path="/" element={<MainPage />} />
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/battle" element={<Battle />} />
-                <Route path="/store" element={<Store />} />
+                <Route 
+                    path="/store" 
+                    element={<Store onHourglassUpdate={handleHourglassUpdate} />} 
+                />
                 <Route path="/profile" element={<Profile userData={userData} />} />
                 <Route 
                     path="/account" 

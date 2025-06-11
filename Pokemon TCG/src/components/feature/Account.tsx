@@ -75,11 +75,14 @@ const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData 
                 </div>
             </div>
             <hr />
-            <div className='accountSignOut'>
-                <button onClick={handleSignOut}>Sign Out</button>
-            </div>
-            <div className='accountDelete'>
-                <button onClick={handleDeleteAccount}>Delete Account</button>
+            
+            <div className='accountButtons'>
+                <div className='accountSignOut'>
+                    <button onClick={handleSignOut}>Sign Out</button>
+                </div>
+                <div className='accountDelete'>
+                    <button onClick={handleDeleteAccount}>Delete Account</button>
+                </div>
             </div>
         </div>
     );

@@ -189,9 +189,9 @@ form h1 {
 .accountContainer {
     position: relative;
     width: 80%;
-    max-width: 800px;
+    max-width: 500px;
     margin: 50px auto;
-    padding: 30px;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid #333333;
     border-radius: 15px;
@@ -210,7 +210,7 @@ form h1 {
     border: none;
     height: 1px;
     background: #333333;
-    margin: 25px 0;
+    margin: 15px 0;
 }
 
 /* Account info */
@@ -223,13 +223,13 @@ form h1 {
 
 .inputBox2 input {
     background: rgba(255, 255, 255, 0.1);
-    padding: 10px 15px;
+    padding: 5px 10px;
     border: 2px solid #333333;
 }
 
 /* Buttons */
 .accountContainer button {
-    padding: 12px 25px;
+    padding: 6px 15px;
     border: none;
     border-radius: 25px;
     font-size: 16px;
@@ -247,9 +247,14 @@ form h1 {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Button container */
+.accountButtons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
 .accountSignOut,
 .accountDelete {
-    text-align: center;
-    margin-top: 20px;
+    margin-top: 0;
 }

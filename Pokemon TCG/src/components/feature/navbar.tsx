@@ -15,14 +15,16 @@ interface NavBarProps {
     setIsLoggedIn: (value: boolean) => void;
     handleSignOut: () => void;
     userData: UserData;
+    hourglassCount: number;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ 
-    onSettingsClick, 
-    isLoggedIn, 
-    setIsLoggedIn, 
+const NavBar: React.FC<NavBarProps> = ({
+    onSettingsClick,
+    isLoggedIn,
+    setIsLoggedIn,
     handleSignOut,
-    userData
+    userData,
+    hourglassCount
 }) => {
     return (
         <header id="header">
@@ -41,13 +43,17 @@ const NavBar: React.FC<NavBarProps> = ({
                         <FontAwesomeIcon icon={faBurst} />
                     </Link>
                     <Link to="/Store" aria-label="Store">
-                        <FontAwesomeIcon icon={faStore}/>
+                        <FontAwesomeIcon icon={faStore} />
                     </Link>
                     <Link to="/Profile" aria-label="Profile">
-                        <FontAwesomeIcon icon={faUser}/>
+                        <FontAwesomeIcon icon={faUser} />
                     </Link>
                 </nav>
                 <div className="userSection">
+                    <div className="hourglassDisplay" title="Hourglasses">
+                        <img src="../public/hourglass.png" alt="Hourglasses" />
+                        <span className="hourglassCount">{hourglassCount}</span>
+                    </div>
                     <button
                         type="button"
                         onClick={onSettingsClick}
@@ -58,6 +64,7 @@ const NavBar: React.FC<NavBarProps> = ({
                         <FontAwesomeIcon icon={faGear} />
                     </button>
                 </div>
+
             </div>
         </header>
     );
