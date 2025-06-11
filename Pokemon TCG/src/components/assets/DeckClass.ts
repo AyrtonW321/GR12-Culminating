@@ -122,4 +122,40 @@ export class Deck {
         this._pokemonCards.clear();
         this._selectedEnergyTypes.clear();
     }
+
+    public toJSON() {
+        return {
+            name: this._name,
+            pokemonCards: Array.from(this._pokemonCards.entries()).map(
+                ([card, count]) => ({
+                    cardData: card.toJSON(),
+                    count,
+                })
+            ),
+            selectedEnergyTypes: Array.from(this._selectedEnergyTypes),
+        };
+    }
+
+    static fromJSON(json: any): Deck {
+        const deck = new Deck(json.name);
+
+        json.pokemonCards.forEach((entry: { cardData: any; count: number }) => {
+            const card = PokemonCard.fromJSON(entry.cardData);
+            if (card) {
+                deck._pokemonCards.set(card, entry.count);
+            } else {
+                console.warn(
+                    `Failed to deserialize card in deck: ${
+                        entry.cardData._pokemonName || "unknown"
+                    }`
+                );
+            }
+        });
+
+        json.selectedEnergyTypes.forEach((type: string) => {
+            deck._selectedEnergyTypes.add(type);
+        });
+
+        return deck;
+    }
 }

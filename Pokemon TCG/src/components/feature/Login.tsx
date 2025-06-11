@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { User } from "../assets/UserClass";
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
@@ -6,7 +7,7 @@ import './login.css';
 
 interface LoginProps {
     setIsLoggedIn: (value: boolean) => void;
-    setUserData: (data: { username: string; email: string; password: string }) => void;
+    setUserData: (user: User) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
@@ -36,6 +37,33 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
         return input.split('').some(char => !isNaN(parseInt(char)));
     }
 
+    const getUsersFromStorage = (): Map<string, User> => {
+        const usersJson = localStorage.getItem('users');
+        if (!usersJson) return new Map();
+        
+        try {
+            const usersData = JSON.parse(usersJson);
+            const usersMap = new Map<string, User>();
+            
+            for (const [username, userJson] of Object.entries(usersData)) {
+                usersMap.set(username, User.fromJSON(userJson));
+            }
+            
+            return usersMap;
+        } catch (error) {
+            console.error('Error parsing users from localStorage:', error);
+            return new Map();
+        }
+    };
+
+    const saveUsersToStorage = (users: Map<string, User>) => {
+        const usersObject: Record<string, any> = {};
+        users.forEach((user, username) => {
+            usersObject[username] = user.toJSON();
+        });
+        localStorage.setItem('users', JSON.stringify(usersObject));
+    };
+
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmedUsername = username.trim();
@@ -57,27 +85,33 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
             return;
         }
 
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        if (users.some((user: any) => user.username === trimmedUsername)) {
+        const users = getUsersFromStorage();
+        if (users.has(trimmedUsername)) {
             alert('User already exists');
-        } else {
-            const newUser = { username: trimmedUsername, email: trimmedEmail, password: trimmedPassword };
-            const updatedUsers = [...users, newUser];
-            localStorage.setItem('users', JSON.stringify(updatedUsers));
-            localStorage.setItem('loggedInUser', JSON.stringify(newUser));
-            alert('User registration successful');
-            setUserData(newUser);
-            setIsLoggedIn(true);
-            navigate('/');
+            return;
         }
+
+        // Create new user with the User class
+        const newUser = new User(trimmedUsername, trimmedEmail, trimmedPassword);
+
+        // Save the user
+        users.set(trimmedUsername, newUser);
+        saveUsersToStorage(users);
+
+        // Set as logged in user
+        localStorage.setItem('loggedInUser', JSON.stringify(newUser.toJSON()));
+        setUserData(newUser);
+        setIsLoggedIn(true);
+        alert('User registration successful');
+        navigate('/');
     };
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         const inputUsername = username.trim();
         const inputPassword = password.trim();
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const matchedUser = users.find((user: any) => user.username === inputUsername);
+        const users = getUsersFromStorage();
+        const matchedUser = users.get(inputUsername);
 
         if (!matchedUser) {
             alert('User not found');
@@ -90,7 +124,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
         }
 
         alert('Login successful');
-        localStorage.setItem('loggedInUser', JSON.stringify(matchedUser));
+        localStorage.setItem('loggedInUser', JSON.stringify(matchedUser.toJSON()));
         setUserData(matchedUser);
         setIsLoggedIn(true);
         navigate('/');

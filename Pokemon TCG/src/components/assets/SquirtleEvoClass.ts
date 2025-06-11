@@ -1,5 +1,5 @@
 import { PokedexInfo } from "./PokedexInfo.js";
-import { WaterGun, WaveSplash, HydroPump, HydroBazooka, Surf } from "./WaterAttacksClass.js";
+import { WaterGun, WaveSplash, HydroPump, Surf, HydroBazooka } from "./AttacksClass.js";
 import { PokemonCard } from "./PokemonCardsClass.js";
 
 export class SquirtleCard extends PokemonCard {

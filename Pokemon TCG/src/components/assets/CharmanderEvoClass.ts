@@ -1,5 +1,11 @@
 import { PokemonCard } from "./PokemonCardsClass.js";
-import { Ember, FireClaws, Slash, CrimsonStorm, FireSpin } from "./FireAttacksClass.js";
+import {
+    Ember,
+    FireClaws,
+    Slash,
+    CrimsonStorm,
+    FireSpin,
+} from "./AttacksClass.js";
 import { PokedexInfo } from "./PokedexInfo.js";
 
 export class CharmanderCard extends PokemonCard {
@@ -8,21 +14,25 @@ export class CharmanderCard extends PokemonCard {
         const attacks = [new Ember()];
 
         super(
-            1,                      // evolutionStage (1 for basic)
-            "",                     // evolvesFrom
-            "Charmander",           // pokemonName
-            false,                  // isEX
-            "fire",                 // type
-            60,                     // HP
-            1,                      // retreatCost
-            "water",                // weakness
-            "charmander.png",       // pokemonPhoto
+            1, // evolutionStage (1 for basic)
+            "", // evolvesFrom
+            "Charmander", // pokemonName
+            false, // isEX
+            "fire", // type
+            60, // HP
+            1, // retreatCost
+            "water", // weakness
+            "charmander.png", // pokemonPhoto
             "Obviously prefers hot places. When it rains, steam is said to spout from the tip of its tail.", // description
-            1,                      // rarity
-            pokedexInfo,           // pokedexInfo
-            attacks,               // attacks
-            undefined              // ability
+            1, // rarity
+            pokedexInfo, // pokedexInfo
+            attacks, // attacks
+            undefined // ability
         );
+    }
+
+    static fromJSON(json: any): CharmanderCard {
+        return new CharmanderCard();
     }
 }
 
@@ -32,24 +42,26 @@ export class CharmeleonCard extends PokemonCard {
         const attacks = [new FireClaws()];
 
         super(
-            2,                      // evolutionStage
-            "Charmander",           // evolvesFrom
-            "Charmeleon",           // pokemonName
-            false,                  // isEX
-            "fire",                 // type
-            90,                     // HP
-            2,                      // retreatCost
-            "water",                // weakness
-            "charmeleon.png",       // pokemonPhoto
+            2, // evolutionStage
+            "Charmander", // evolvesFrom
+            "Charmeleon", // pokemonName
+            false, // isEX
+            "fire", // type
+            90, // HP
+            2, // retreatCost
+            "water", // weakness
+            "charmeleon.png", // pokemonPhoto
             "When it swings its burning tail, it elevates the temperature to unbearably high levels.", // description
-            2,                      // rarity
-            pokedexInfo,           // pokedexInfo
-            attacks,               // attacks
-            undefined              // ability
+            2, // rarity
+            pokedexInfo, // pokedexInfo
+            attacks, // attacks
+            undefined // ability
         );
     }
+    static fromJSON(json: any): CharmeleonCard {
+        return new CharmeleonCard();
+    }
 }
-
 
 export class CharizardCard extends PokemonCard {
     constructor() {
@@ -57,24 +69,27 @@ export class CharizardCard extends PokemonCard {
         const attacks = [new FireSpin()];
 
         super(
-            3,                      // evolutionStage
-            "Charmeleon",           // evolvesFrom
-            "Charizard",            // pokemonName
-            false,                  // isEX
-            "fire",                 // type
-            150,                    // HP
-            3,                      // retreatCost
-            "water",                // weakness
-            "charizard.png",        // pokemonPhoto
+            3, // evolutionStage
+            "Charmeleon", // evolvesFrom
+            "Charizard", // pokemonName
+            false, // isEX
+            "fire", // type
+            150, // HP
+            3, // retreatCost
+            "water", // weakness
+            "charizard.png", // pokemonPhoto
             "Spits fire that is hot enough to melt boulders. Known to unintentionally cause forest fires.", // description
-            3,                      // rarity
-            pokedexInfo,           // pokedexInfo
-            attacks,               // attacks
-            undefined              // ability
+            3, // rarity
+            pokedexInfo, // pokedexInfo
+            attacks, // attacks
+            undefined // ability
         );
     }
-}
 
+    static fromJSON(json: any): CharizardCard {
+        return new CharizardCard();
+    }
+}
 
 export class CharizardEXCard extends PokemonCard {
     constructor() {
@@ -82,20 +97,24 @@ export class CharizardEXCard extends PokemonCard {
         const attacks = [new Slash(), new CrimsonStorm()];
 
         super(
-            3,                      // evolutionStage
-            "Charmeleon",           // evolvesFrom
-            "Charizard EX",         // pokemonName
-            true,                   // isEX
-            "fire",                 // type
-            180,                    // HP
-            3,                      // retreatCost
-            "water",                // weakness
-            "charizard_ex.png",     // pokemonPhoto
+            3, // evolutionStage
+            "Charmeleon", // evolvesFrom
+            "Charizard EX", // pokemonName
+            true, // isEX
+            "fire", // type
+            180, // HP
+            3, // retreatCost
+            "water", // weakness
+            "charizard_ex.png", // pokemonPhoto
             "A powerful and rare Charizard form that unleashes extreme firepower at the cost of heavy energy.", // description
-            4,                      // rarity
-            pokedexInfo,           // pokedexInfo
-            attacks,               // attacks
-            undefined              // ability
+            4, // rarity
+            pokedexInfo, // pokedexInfo
+            attacks, // attacks
+            undefined // ability
         );
+    }
+
+    static fromJSON(json: any): CharizardEXCard {
+        return new CharizardEXCard();
     }
 }

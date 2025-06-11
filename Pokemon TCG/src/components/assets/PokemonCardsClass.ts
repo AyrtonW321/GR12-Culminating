@@ -367,4 +367,66 @@ export class PokemonCard {
     public getBurnCount(): number {
         return this._activeStatus.burnCount;
     }
+
+    public toJSON() {
+        return {
+            _evolutionStage: this._evolutionStage,
+            _evolvesFrom: this._evolvesFrom,
+            _pokemonName: this._pokemonName,
+            _isEX: this._isEX,
+            _type: this._type,
+            _HP: this._HP,
+            _pokemonPhoto: this._pokemonPhoto,
+            _attacks: this._attacks.map((attack) => attack.toJSON()),
+            _abilities: this._abilities ? this._abilities.toJSON() : null,
+            _weakness: this._weakness,
+            _retreatCost: this._retreatCost,
+            _rarity: this._rarity,
+            _description: this._description,
+            _pokedexInfo: this._pokedexInfo.toJSON() ?? null,
+
+            _currentHP: this._currentHP,
+            _boostedStats: this._boostedStats,
+            _activeStatus: {
+                statuses: Array.from(this._activeStatus.statuses),
+                poisonCount: this._activeStatus.poisonCount,
+                burnCount: this._activeStatus.burnCount,
+            },
+            _attachedEnergyType: this._attachedEnergyType,
+            _attachedEnergyAmount: this._attachedEnergyAmount,
+            _isActive: this._isActive,
+            _isDiscarded: this._isDiscarded,
+            _inBench: this._inBench,
+        };
+    }
+    static fromJSON(json: any): PokemonCard {
+        return new PokemonCard(
+            json._evolutionStage,
+            json._evolvesFrom,
+            json._pokemonName,
+            json._isEX,
+            json._type,
+            json._HP,
+            json._retreatCost,
+            json._weakness,
+            json._pokemonPhoto,
+            json._description,
+            json._rarity,
+            PokedexInfo.fromJSON(json._pokedexInfo),
+            json._attacks.map((a: any) => Attack.fromJSON(a)),
+            json._abilities ? Ability.fromJSON(json._abilities) : undefined,
+            json._currentHP,
+            json._boostedStats,
+            {
+                statuses: new Set(json._activeStatus.statuses),
+                poisonCount: json._activeStatus.poisonCount,
+                burnCount: json._activeStatus.burnCount,
+            },
+            json._attachedEnergyType,
+            json._attachedEnergyAmount,
+            json._isActive,
+            json._isDiscarded,
+            json._inBench
+        );
+    }
 }
