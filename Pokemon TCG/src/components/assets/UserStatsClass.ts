@@ -27,4 +27,16 @@ export class UserStats {
         const totalGames = this.wins + this.losses;
         return totalGames === 0 ? 0 : (this.wins / totalGames) * 100;
     }
+
+    public toJSON() {
+        return {
+            wins: this.wins,
+            losses: this.losses,
+            currentStreak: this.currentStreak,
+        };
+    }
+
+    public static fromJSON(json: any): UserStats {
+        return new UserStats(json.wins, json.losses, json.currentStreak);
+    }
 }

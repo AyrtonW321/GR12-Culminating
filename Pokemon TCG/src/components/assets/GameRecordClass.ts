@@ -41,4 +41,30 @@ export class GameRecord {
             `Winner: ${winnerName} in ${this.turns} turns.`
         );
     }
+
+    public toJSON() {
+        return {
+            recordId: this.recordId,
+            date: this.date.toISOString(),
+            opponent: this.opponent.toJSON(),
+            userDeck: this.userDeck.toJSON(),
+            opponentDeck: this.opponentDeck.toJSON(),
+            winner: this.winner.toJSON(),
+            turns: this.turns,
+            gameLog: this.gameLog,
+        };
+    }
+
+    public static fromJSON(json: any): GameRecord {
+        return new GameRecord(
+            json.recordId,
+            new Date(json.date),
+            User.fromJSON(json.opponent),
+            Deck.fromJSON(json.userDeck),
+            Deck.fromJSON(json.opponentDeck),
+            User.fromJSON(json.winner),
+            json.turns,
+            json.gameLog
+        );
+    }
 }

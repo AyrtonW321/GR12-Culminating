@@ -41,6 +41,8 @@ const HOURGLASS_COST = 12;
 
 export class User {
     private _username: string;
+    private _email: string;
+    private _password: string;
     private _collection: Map<PokemonCard, number>;
     private _decks: Deck[];
     private _victories: number;
@@ -58,14 +60,25 @@ export class User {
 
     private _hourglasses: number;
 
-    constructor(username: string) {
+    constructor(username: string, email: string, password: string) {
+        this._password = password;
+        this._email = email;
         this._username = username;
         this._collection = new Map();
         this._gameStats = new UserStats(0, 0, 0);
+        this._hourglasses = 0;
     }
 
     get username(): string {
         return this._username;
+    }
+
+    get email(): string {
+        return this._email;
+    }
+
+    get password(): string {
+        return this._password;
     }
 
     get collection(): Map<PokemonCard, number> {
@@ -596,14 +609,48 @@ export class User {
         this._activeDeckName = null;
     }
 
-    public updateProfile(newUsername: string): boolean {
-        if (!newUsername || newUsername.trim().length === 0) {
-            console.log("Username cannot be empty");
+    public updateProfile(
+        newUsername?: string,
+        newPassword?: string,
+        newEmail?: string
+    ): boolean {
+        let updated = false;
+
+        if (newUsername !== undefined) {
+            if (!newUsername || newUsername.trim().length === 0) {
+                console.log("Username cannot be empty");
+                return false;
+            }
+            this._username = newUsername;
+            console.log(`Username changed to ${newUsername}`);
+            updated = true;
+        }
+
+        if (newPassword !== undefined) {
+            if (!newPassword || newPassword.trim().length === 0) {
+                console.log("Password cannot be empty");
+                return false;
+            }
+            this._password = newPassword;
+            console.log("Password updated.");
+            updated = true;
+        }
+
+        if (newEmail !== undefined) {
+            if (!newEmail || newEmail.trim().length === 0) {
+                console.log("Email cannot be empty");
+                return false;
+            }
+            this._email = newEmail;
+            console.log(`Email changed to ${newEmail}`);
+            updated = true;
+        }
+
+        if (!updated) {
+            console.log("No profile fields provided to update profile");
             return false;
         }
 
-        this._username = newUsername;
-        console.log(`Username changed to ${newUsername}`);
         return true;
     }
 
@@ -618,5 +665,112 @@ export class User {
     public addHourglass(amt: number) {
         this._hourglasses += amt;
         return this._hourglasses;
+    }
+
+    public toJSON() {
+        return {
+            _username: this._username ?? null,
+            _email: this._email ?? null,
+            _password: this._password ?? null,
+
+            _collection: this._collection
+                ? Array.from(this._collection.entries()).map(
+                      ([card, count]) => [card?.toJSON?.() ?? null, count]
+                  )
+                : [],
+
+            _decks: this._decks?.map((deck) => deck?.toJSON?.() ?? null) ?? [],
+
+            _victories: this._victories ?? 0,
+            _gameStats: this._gameStats?.toJSON?.() ?? null,
+            _winRate: this._winRate ?? 0,
+
+            _gameHistory:
+                this._gameHistory?.map(
+                    (record: GameRecord): any => record?.toJSON?.() ?? null
+                ) ?? [],
+
+            _activeDeckName: this._activeDeckName ?? null,
+            _activeDeck: this._activeDeck?.toJSON?.() ?? null,
+            _activeCard: this._activeCard?.toJSON?.() ?? null,
+            _bench: this._bench?.map((card) => card?.toJSON?.() ?? null) ?? [],
+            _hand: this._hand?.map((card) => card?.toJSON?.() ?? null) ?? [],
+            _discardPile:
+                this._discardPile?.map((card) => card?.toJSON?.() ?? null) ??
+                [],
+            _currentPoints: this._currentPoints ?? 0,
+
+            _hourglasses: this._hourglasses ?? 0,
+        };
+    }
+
+    static fromJSON(json: any): User {
+        const user = new User(
+            json._username ?? "",
+            json._email ?? "",
+            json._password ?? ""
+        );
+
+        // Collection
+        const collectionMap = new Map<PokemonCard, number>();
+        if (Array.isArray(json._collection)) {
+            for (const entry of json._collection) {
+                try {
+                    const card = PokemonCard.fromJSON(entry?.[0] ?? {});
+                    const count = entry?.[1] ?? 0;
+                    if (card) collectionMap.set(card, count);
+                } catch (e) {
+                    console.error("Failed to parse collection entry:", entry);
+                }
+            }
+        }
+        user._collection = collectionMap;
+
+        // Decks
+        user._decks = Array.isArray(json._decks)
+            ? json._decks.map((deckData: any) => Deck.fromJSON(deckData ?? {}))
+            : [];
+
+        // Game stats
+        user._victories = Number(json._victories) || 0;
+        user._gameStats = json._gameStats
+            ? UserStats.fromJSON(json._gameStats)
+            : new UserStats(0, 0, 0);
+        user._winRate = Number(json._winRate) || 0;
+
+        // Game history
+        user._gameHistory = Array.isArray(json._gameHistory)
+            ? json._gameHistory.map((record: any) =>
+                  GameRecord.fromJSON(record ?? {})
+              )
+            : [];
+
+        // Game state
+        user._activeDeckName = json._activeDeckName ?? null;
+        user._activeDeck = json._activeDeck
+            ? Deck.fromJSON(json._activeDeck)
+            : null;
+        if (!user._activeCard) {
+            user._activeCard = undefined as unknown as PokemonCard;
+        } else {
+            user._activeCard = PokemonCard.fromJSON(json._activeCard ?? {});
+        }
+        user._bench = Array.isArray(json._bench) 
+            ? json._bench.map((card: any) => PokemonCard.fromJSON(card ?? {}))
+            : [];
+        user._hand = Array.isArray(json._hand)
+            ? json._hand.map((card: any) => PokemonCard.fromJSON(card ?? {}))
+            : [];
+        user._discardPile = Array.isArray(json._discardPile)
+            ? json._discardPile.map((card: any) =>
+                  PokemonCard.fromJSON(card ?? {})
+              )
+            : [];
+        user._currentPoints = Number(json._currentPoints) || 0;
+
+        // Currency
+        user._hourglasses = Number(json._hourglasses) || 0;
+
+        return user;
     }
 }

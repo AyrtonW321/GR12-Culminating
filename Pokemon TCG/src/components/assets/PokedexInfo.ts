@@ -20,4 +20,20 @@ export class PokedexInfo {
     get weight(): number {
         return this._weight;
     }
+
+    public toJSON() {
+        return {
+            pokedexNumber: this._pokedexNumber ?? 0,
+            height: this._height ?? 0,
+            weight: this._weight ?? 0,
+        };
+    }
+
+    public static fromJSON(json: any): PokedexInfo {
+        return new PokedexInfo(
+            (json.pokedexNumber as number) ?? 0,
+            (json.height as number) ?? 0,
+            (json.weight as number) ?? 0
+        );
+    }
 }

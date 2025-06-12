@@ -1,5 +1,10 @@
 import { PokemonCard } from "./PokemonCardsClass.js";
-import { VineWhip, RazorLeaf, MegaDrain, GiantBloom } from "./GrassAttacksClass.js";
+import {
+    VineWhip,
+    RazorLeaf,
+    MegaDrain,
+    GiantBloom,
+} from "./AttacksClass.js";
 import { PokedexInfo } from "./PokedexInfo.js";
 
 export class BulbasaurCard extends PokemonCard {
@@ -8,21 +13,25 @@ export class BulbasaurCard extends PokemonCard {
         const attacks = [new VineWhip()];
 
         super(
-            1,                      // evolutionStage (1 = basic)
-            "",                     // evolvesFrom
-            "Bulbasaur",            // pokemonName
-            false,                  // isEX
-            "grass",                // type
-            60,                     // HP
-            1,                      // retreatCost
-            "fire",                 // weakness
-            "bulbasaur.png",        // pokemonPhoto
+            1, // evolutionStage (1 = basic)
+            "", // evolvesFrom
+            "Bulbasaur", // pokemonName
+            false, // isEX
+            "grass", // type
+            60, // HP
+            1, // retreatCost
+            "fire", // weakness
+            "bulbasaur.png", // pokemonPhoto
             "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon.", // description
-            1,                      // rarity
+            1, // rarity
             pokedexInfo,
             attacks,
             undefined
         );
+    }
+
+    static fromJSON(json: any): BulbasaurCard {
+        return new BulbasaurCard();
     }
 }
 
@@ -48,6 +57,10 @@ export class IvysaurCard extends PokemonCard {
             undefined
         );
     }
+    
+    static fromJSON(json: any): IvysaurCard {
+        return new IvysaurCard();
+    }
 }
 
 export class VenusaurCard extends PokemonCard {
@@ -72,6 +85,10 @@ export class VenusaurCard extends PokemonCard {
             undefined
         );
     }
+
+    static fromJSON(json: any): VenusaurCard {
+        return new VenusaurCard();
+    }
 }
 
 export class VenusaurEXCard extends PokemonCard {
@@ -83,7 +100,7 @@ export class VenusaurEXCard extends PokemonCard {
             3,
             "Ivysaur",
             "Venusaur EX",
-            true,                   // isEX
+            true, // isEX
             "grass",
             190,
             3,
@@ -95,5 +112,9 @@ export class VenusaurEXCard extends PokemonCard {
             attacks,
             undefined
         );
+    }
+
+    static fromJSON(json: any): VenusaurEXCard {
+        return new VenusaurEXCard();
     }
 }
