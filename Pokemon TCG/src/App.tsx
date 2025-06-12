@@ -28,13 +28,13 @@ function App() {
         localStorage.removeItem('loggedInUser');
     };
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('loggedInUser');
-        if (storedUser) {
-            setIsLoggedIn(true);
-            setUserData(JSON.parse(storedUser));
-        }
-    }, []);
+    // useEffect(() => {
+    //     const storedUser = localStorage.getItem('loggedInUser');
+    //     if (storedUser) {
+    //         setIsLoggedIn(true);
+    //         setUserData(JSON.parse(storedUser));
+    //     }
+    // }, []);
 
     if (!isLoggedIn) {
         return (

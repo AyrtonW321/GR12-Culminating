@@ -103,7 +103,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
         setUserData(newUser);
         setIsLoggedIn(true);
         alert('User registration successful');
-        navigate('/');
+        navigate('/', { state: { user: newUser } });
     };
 
     const handleLogin = (e: React.FormEvent) => {
@@ -127,7 +127,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
         localStorage.setItem('loggedInUser', JSON.stringify(matchedUser.toJSON()));
         setUserData(matchedUser);
         setIsLoggedIn(true);
-        navigate('/');
+        navigate('/',  { state: { user: matchedUser } });
     };
 
     const registerLink = () => setAction(' active');
