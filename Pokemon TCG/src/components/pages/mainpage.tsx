@@ -20,16 +20,10 @@ const MainPage = () => {
     console.log(user);
   const [showMissions, setShowMissions] = useState<boolean>(false);
 
-  const handleOpenPack = () => {
-    setIsOpening(true);
-    setTimeout(() => {
-      setIsOpening(false);
-    }, 2000);
-  };
-
   const handleMissionsClick = () => {
     setShowMissions(true);
   };
+
     const handleOpenPack = () => {
         setIsOpening(true);
         // Simulate pack opening animation
@@ -45,37 +39,20 @@ const MainPage = () => {
       <div className="pack-display-container">
         <h2>Base Set Pack</h2>
         <div className="pack-image">
+          {/* Empty div for your pack image - add background-image in CSS */}
         </div>
-    return (
-        <div className="main-container">
-            <div className="pack-display-container">
-                <h2>Base Set Pack</h2>
-                <div className="pack-image">
-                    {/* Empty div for your pack image - add background-image in CSS */}
-                </div>
-
         <button
-          type='button'
-          className={`open-pack-button ${isOpening ? 'opening' : ''}`}
+          type="button"
+          className={`open-pack-button ${isOpening ? "opening" : ""}`}
           onClick={handleOpenPack}
           disabled={isOpening}
         >
           <FontAwesomeIcon icon={faGift} />
-          {isOpening ? 'Opening...' : 'Open Pack'}
+          {isOpening ? "Opening..." : "Open Pack"}
         </button>
       </div>
-                <button
-                    type="button"
-                    className={`open-pack-button ${isOpening ? "opening" : ""}`}
-                    onClick={handleOpenPack}
-                    disabled={isOpening}
-                >
-                    <FontAwesomeIcon icon={faGift} />
-                    {isOpening ? "Opening..." : "Open Pack"}
-                </button>
-            </div>
 
-            <button className="missions-button" title="Missions" onClick={handleMissionsClick}>
+      <button className="missions-button" title="Missions" onClick={handleMissionsClick}>
         <FontAwesomeIcon icon={faClipboardList} />
         <span className="missions-label">Mission</span>
       </button>
@@ -84,7 +61,6 @@ const MainPage = () => {
         <Missions closeModal={() => setShowMissions(false)} />
       )}
 
-      {/* Pack opening animation would go here
             {isOpening && (
                 <div className="pack-opening-animation">
                     <div className="cards-flipping">
@@ -97,9 +73,9 @@ const MainPage = () => {
                         ))}
                     </div>
                 </div>
-            )} */}
-        </div>
-    );
+            )} 
+    </div>
+  );
 };
 
 export default MainPage;
