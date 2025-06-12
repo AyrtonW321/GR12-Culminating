@@ -51,7 +51,7 @@ const NavBar: React.FC<NavBarProps> = ({
                 </nav>
                 <div className="userSection">
                     <div className="hourglassDisplay" title="Hourglasses">
-                        <img src="../public/hourglass.png" alt="Hourglasses" />
+                        <img src="./hourglass.png" alt="Hourglasses" />
                         <span className="hourglassCount">{hourglassCount}</span>
                     </div>
                     <button

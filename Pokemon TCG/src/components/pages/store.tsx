@@ -81,7 +81,6 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
       <div className="store-main-display">
         <div className="store-header">
           <h1 className="store-title">Hourglass Store</h1>
-          <p className="store-subtitle">Exchange your coins for hourglasses to unlock more features!</p>
         </div>
 
         <div className="currency-display">
@@ -111,9 +110,6 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
           </div>
 
           <div className="quantity-selector">
-            <label className="quantity-label">
-              Select Quantity: {quantity} hourglass{quantity !== 1 ? 'es' : ''}
-            </label>
             
             <div className="slider-container">
               <input

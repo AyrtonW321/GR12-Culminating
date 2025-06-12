@@ -31,7 +31,7 @@ h2 {
   background-color: #f0f0f0;
   border-radius: 10px;
   margin-bottom: 25px;
-  background-image: url('./public/pack.jpg');
+  background-image: url('./pack.jpg');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
