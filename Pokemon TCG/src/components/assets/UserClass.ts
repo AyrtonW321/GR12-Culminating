@@ -299,11 +299,39 @@ export class User {
     public addToCollection(cards: PokemonCard[]): boolean {
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
-            const currentCount = this._collection.get(card) || 0;
-            this._collection.set(card, currentCount + 1);
-        }
+            let existingCard: PokemonCard | undefined;
+            for (const collectedCard of this._collection.keys()) {
+                console.log(this.areCardsEqual(collectedCard, card))
+                if (this.areCardsEqual(collectedCard, card)) {
+                    existingCard = collectedCard;
+                    break;
+                }
+            }
 
+            if (existingCard) {
+                const currentCount = this._collection.get(existingCard) || 0;
+                this._collection.set(existingCard, currentCount + 1);
+            } else {
+                this._collection.set(card, 1);
+            }
+        }
         return true;
+    }
+
+    private areCardsEqual(card1: PokemonCard, card2: PokemonCard): boolean {
+        return (
+            card1.pokemonPhoto === card2.pokemonPhoto &&
+            card1.isEX === card2.isEX &&
+            card1.Rarity === card2.Rarity &&
+            card1.type === card2.type &&
+            card1.evolvesFrom === card2.evolvesFrom &&
+            card1.hp === card2.hp &&
+            card1.CurrentHP === card2.CurrentHP &&
+            card1.Attacks?.length === card2.Attacks?.length &&
+            card1.evolutionStage === card2.evolutionStage &&
+            card1.Weakness === card2.Weakness &&
+            card1.RetreatCost === card2.RetreatCost
+        );
     }
 
     public searchCollection(filters?: {
@@ -755,7 +783,7 @@ export class User {
         } else {
             user._activeCard = PokemonCard.fromJSON(json._activeCard ?? {});
         }
-        user._bench = Array.isArray(json._bench) 
+        user._bench = Array.isArray(json._bench)
             ? json._bench.map((card: any) => PokemonCard.fromJSON(card ?? {}))
             : [];
         user._hand = Array.isArray(json._hand)

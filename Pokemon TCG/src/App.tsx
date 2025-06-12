@@ -33,19 +33,18 @@ function App() {
         setHourglassCount(newAmount);
     };
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('loggedInUser');
-        if (storedUser) {
-            setIsLoggedIn(true);
-            setUserData(JSON.parse(storedUser));
-        }
-
-        // Load hourglass count from localStorage
-        const savedHourglasses = localStorage.getItem('userHourglasses');
-        if (savedHourglasses) {
-            setHourglassCount(parseInt(savedHourglasses));
-        }
-    }, []);
+    // useEffect(() => {
+    //     const storedUser = localStorage.getItem('loggedInUser');
+    //     if (storedUser) {
+    //         setIsLoggedIn(true);
+    //         setUserData(JSON.parse(storedUser));
+    //     }
+            // Load hourglass count from localStorage
+            // const savedHourglasses = localStorage.getItem('userHourglasses');
+            // if (savedHourglasses) {
+            //     setHourglassCount(parseInt(savedHourglasses));
+            // }
+    // }, []);
 
     if (!isLoggedIn) {
         return (
