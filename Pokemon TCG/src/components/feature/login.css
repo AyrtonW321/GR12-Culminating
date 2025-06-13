@@ -258,3 +258,55 @@ form h1 {
 .accountDelete {
     margin-top: 0;
 }
+
+.google-signin {
+  margin: 15px 0;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.google-btn:hover {
+  background: #357ae8;
+}
+
+.google-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.google-icon {
+  font-size: 18px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.delete-btn {
+  background-color: #dc3545 !important;
+}
+
+.profile-section {
+  margin-bottom: 15px;
+}
+
+.profile-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

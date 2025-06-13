@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
-import { User } from "../assets/UserClass";
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FaGoogle } from 'react-icons/fa';
 import './login.css';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signInWithPopup, 
+    GoogleAuthProvider,
+    updateProfile 
+} from "firebase/auth";
+import { auth } from "../assets/firebaseConfig";
+
+interface UserData {
+    username: string;
+    email: string;
+    password: string;
+}
 
 interface LoginProps {
     setIsLoggedIn: (value: boolean) => void;
-    setUserData: (user: User) => void;
+    setUserData: (user: UserData) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
@@ -16,118 +30,154 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    function isValidEmail(email: string) {
-        const trimmedEmail = email.trim();
-        const commonSuffixes = ['gmail.com', 'yahoo.com', 'hotmail.com', 'gapps.yrdsb.ca'];
-        const emailDomain = trimmedEmail.substring(trimmedEmail.lastIndexOf('@') + 1);
-        return commonSuffixes.includes(emailDomain);
-    }
+    const googleProvider = new GoogleAuthProvider();
 
-    function isValidPassword(password: string) {
-        if (password.length < 8) return false;
-        const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
-        if (!specialCharRegex.test(password)) return false;
-        if (password.toLowerCase() === password) return false;
-        return containsNumber(password);
-    }
-
-    function containsNumber(input: string) {
-        return input.split('').some(char => !isNaN(parseInt(char)));
-    }
-
-    const getUsersFromStorage = (): Map<string, User> => {
-        const usersJson = localStorage.getItem('users');
-        if (!usersJson) return new Map();
-        
-        try {
-            const usersData = JSON.parse(usersJson);
-            const usersMap = new Map<string, User>();
-            
-            for (const [username, userJson] of Object.entries(usersData)) {
-                usersMap.set(username, User.fromJSON(userJson));
-            }
-            
-            return usersMap;
-        } catch (error) {
-            console.error('Error parsing users from localStorage:', error);
-            return new Map();
-        }
-    };
-
-    const saveUsersToStorage = (users: Map<string, User>) => {
-        const usersObject: Record<string, any> = {};
-        users.forEach((user, username) => {
-            usersObject[username] = user.toJSON();
-        });
-        localStorage.setItem('users', JSON.stringify(usersObject));
-    };
-
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+        
         const trimmedUsername = username.trim();
         const trimmedEmail = email.trim();
         const trimmedPassword = password.trim();
 
-        if (trimmedUsername.length < 3 || trimmedUsername.length > 15 || trimmedUsername[0] !== trimmedUsername[0].toUpperCase()) {
-            alert('Username must be within 3 and 15 characters long, and start with a capital letter');
+        // Basic validation
+        if (trimmedUsername.length < 3) {
+            alert('Username must be at least 3 characters long');
+            setLoading(false);
             return;
         }
 
-        if (!isValidEmail(trimmedEmail)) {
-            alert('Invalid email address');
+        if (trimmedPassword.length < 6) {
+            alert('Password must be at least 6 characters long');
+            setLoading(false);
             return;
         }
 
-        if (!isValidPassword(trimmedPassword)) {
-            alert('Invalid password. Must be at least 8 characters long, contain at least one special character, one capital letter, and one number.');
-            return;
+        try {
+            // Create user with Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+            
+            // Update the user's display name
+            await updateProfile(userCredential.user, {
+                displayName: trimmedUsername
+            });
+
+            // Set user data in your app state
+            const userData = {
+                username: trimmedUsername,
+                email: trimmedEmail,
+                password: '' // Don't store password in state
+            };
+
+            setUserData(userData);
+            setIsLoggedIn(true);
+            navigate('/');
+        } catch (error: any) {
+            let errorMessage = 'Registration failed';
+            
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'This email is already registered. Please use a different email or try logging in.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
         }
-
-        const users = getUsersFromStorage();
-        if (users.has(trimmedUsername)) {
-            alert('User already exists');
-            return;
-        }
-
-        // Create new user with the User class
-        const newUser = new User(trimmedUsername, trimmedEmail, trimmedPassword);
-
-        // Save the user
-        users.set(trimmedUsername, newUser);
-        saveUsersToStorage(users);
-
-        // Set as logged in user
-        localStorage.setItem('loggedInUser', JSON.stringify(newUser.toJSON()));
-        setUserData(newUser);
-        setIsLoggedIn(true);
-        alert('User registration successful');
-        navigate('/', { state: { user: newUser } });
     };
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const inputUsername = username.trim();
-        const inputPassword = password.trim();
-        const users = getUsersFromStorage();
-        const matchedUser = users.get(inputUsername);
+        setLoading(true);
+        
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
 
-        if (!matchedUser) {
-            alert('User not found');
-            return;
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+            const user = userCredential.user;
+            
+            const userData = {
+                username: user.displayName || user.email?.split('@')[0] || 'User',
+                email: user.email || '',
+                password: '' // Don't store password in state
+            };
+
+            setUserData(userData);
+            setIsLoggedIn(true);
+            navigate('/');
+        } catch (error: any) {
+            let errorMessage = 'Login failed';
+            
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = 'No account found with this email. Please register first.';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Incorrect password. Please try again.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address.';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Too many failed attempts. Please try again later.';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
         }
+    };
 
-        if (matchedUser.password !== inputPassword) {
-            alert('Incorrect password');
-            return;
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            
+            const userData = {
+                username: user.displayName || user.email?.split('@')[0] || 'User',
+                email: user.email || '',
+                password: '' // Google auth doesn't provide password
+            };
+
+            setUserData(userData);
+            setIsLoggedIn(true);
+            navigate('/');
+        } catch (error: any) {
+            let errorMessage = 'Google sign-in failed';
+            
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    errorMessage = 'Sign-in cancelled. Please try again.';
+                    break;
+                case 'auth/popup-blocked':
+                    errorMessage = 'Popup was blocked. Please allow popups and try again.';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
         }
-
-        alert('Login successful');
-        localStorage.setItem('loggedInUser', JSON.stringify(matchedUser.toJSON()));
-        setUserData(matchedUser);
-        setIsLoggedIn(true);
-        navigate('/',  { state: { user: matchedUser } });
     };
 
     const registerLink = () => setAction(' active');
@@ -139,56 +189,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
             <div className='formBox login'>
                 <form onSubmit={handleLogin}>
                     <h1>Login</h1>
-                    <div className='inputBox'>
-                        <input
-                            type='text'
-                            placeholder='Username'
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)} 
-                            required
-                        />
-                        <FontAwesomeIcon className='icon' icon={faUser} />
-                    </div>
-                    <div className='inputBox'>
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder='Password'
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                        <button type="button" onClick={toggleShowPassword}>
-                            {showPassword ? <FontAwesomeIcon className='icon' icon={faEyeSlash} id='eye' />
-                             : <FontAwesomeIcon className='icon' icon={faEye} id='eye' />}
-                        </button>
-                        <FontAwesomeIcon className='icon' icon={faLock}/>
-                    </div>
-                    <div className='rememberForgot'>
-                        <label>
-                            <input className='checkbox' type='checkbox' />
-                            Remember me
-                        </label>
-                        <a href='#'>Forgot Password?</a>
-                    </div>
-                    <button className='submit' type='submit'>Login</button>
-                    <div className='register'>
-                        <p>Don't have an account? <a href='#' onClick={registerLink}>Register</a></p>
-                    </div>
-                </form>
-            </div>
-            <div className='formBox register'>
-                <form onSubmit={handleRegister}>
-                    <h1>Register Account</h1>
-                    <div className='inputBox'>
-                        <input
-                            type='text'
-                            placeholder='Username'
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                        />
-                        <FontAwesomeIcon className='icon' icon={faUser} />
-                    </div>
+                    
                     <div className='inputBox'>
                         <input
                             type='email'
@@ -196,9 +197,11 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            disabled={loading}
                         />
-                        <FontAwesomeIcon className='icon' icon={faEnvelope}/>
+                        <FontAwesomeIcon className='icon' icon={faEnvelope} />
                     </div>
+                    
                     <div className='inputBox'>
                         <input
                             type={showPassword ? 'text' : 'password'}
@@ -206,19 +209,118 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            disabled={loading}
                         />
-                        <button type="button" onClick={toggleShowPassword}>
-                            {showPassword ? <FontAwesomeIcon className='icon' icon={faEyeSlash} id='eye' /> : <FontAwesomeIcon className='icon' icon={faEye} id='eye' />}
+                        <button type="button" onClick={toggleShowPassword} disabled={loading}>
+                            <FontAwesomeIcon 
+                                className='icon' 
+                                icon={showPassword ? faEyeSlash : faEye} 
+                                id='eye' 
+                            />
                         </button>
-                        <FontAwesomeIcon className='icon' icon={faLock}/>
+                        <FontAwesomeIcon className='icon' icon={faLock} />
                     </div>
+                    
                     <div className='rememberForgot'>
                         <label>
-                            <input className='checkbox' type='checkbox' required />
+                            <input className='checkbox' type='checkbox' disabled={loading} />
+                            Remember me
+                        </label>
+                        <a href='#'>Forgot Password?</a>
+                    </div>
+                    
+                    <button className='submit' type='submit' disabled={loading}>
+                        {loading ? 'Signing in...' : 'Login'}
+                    </button>
+                    
+                    <div className='google-signin'>
+                        <button 
+                            type='button' 
+                            className='google-btn' 
+                            onClick={handleGoogleSignIn}
+                            disabled={loading}
+                        >
+                            <FaGoogle />
+                            Sign in with Google
+                        </button>
+                    </div>
+                    
+                    <div className='register'>
+                        <p>Don't have an account? <a href='#' onClick={registerLink}>Register</a></p>
+                    </div>
+                </form>
+            </div>
+            
+            <div className='formBox register'>
+                <form onSubmit={handleRegister}>
+                    <h1>Create Account</h1>
+                    
+                    <div className='inputBox'>
+                        <input
+                            type='text'
+                            placeholder='Username'
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                        <FontAwesomeIcon className='icon' icon={faEnvelope} />
+                    </div>
+                    
+                    <div className='inputBox'>
+                        <input
+                            type='email'
+                            placeholder='Email'
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                        <FontAwesomeIcon className='icon' icon={faEnvelope} />
+                    </div>
+                    
+                    <div className='inputBox'>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder='Password'
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                        <button type="button" onClick={toggleShowPassword} disabled={loading}>
+                            <FontAwesomeIcon 
+                                className='icon' 
+                                icon={showPassword ? faEyeSlash : faEye} 
+                                id='eye' 
+                            />
+                        </button>
+                        <FontAwesomeIcon className='icon' icon={faLock} />
+                    </div>
+                    
+                    <div className='rememberForgot'>
+                        <label>
+                            <input className='checkbox' type='checkbox' required disabled={loading} />
                             I agree to the terms & conditions
                         </label>
                     </div>
-                    <button className='submit' type='submit'>Register</button>
+                    
+                    <button className='submit' type='submit' disabled={loading}>
+                        {loading ? 'Creating Account...' : 'Register'}
+                    </button>
+                    
+                    <div className='google-signin'>
+                        <button 
+                            type='button' 
+                            className='google-btn' 
+                            onClick={handleGoogleSignIn}
+                            disabled={loading}
+                        >
+                            <FaGoogle/>
+                            Sign up with Google
+                        </button>
+                    </div>
+                    
                     <div className='register'>
                         <p>Already have an account? <a href='#' onClick={loginLink}>Log In</a></p>
                     </div>

@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "react-router-dom": "^7.6.1",
-    "typescript": "^5.8.3",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
-    "@fortawesome/react-fontawesome": "^0.2.2"
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.6.1",
+    "typescript": "^5.8.3"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
