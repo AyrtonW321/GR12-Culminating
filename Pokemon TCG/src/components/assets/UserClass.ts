@@ -172,6 +172,10 @@ export class User {
         return this._winRate;
     }
 
+    get hourglass(): number {
+        return this._hourglasses;
+    }
+
     public openBoosterPack(cardsToOpen: number = 5): PokemonCard[] {
         const cardsByRarity: Record<number, PokemonCard[]> = {};
         for (let rarity = 1; rarity <= 8; rarity++) {

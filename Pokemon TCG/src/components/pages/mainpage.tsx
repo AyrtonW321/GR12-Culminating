@@ -16,16 +16,37 @@ const MainPage = () => {
         }
     }, []);
 
-    console.log(user);
-
     const handleOpenPack = () => {
+        if (!user || isOpening) return;
+
         setIsOpening(true);
-        // Simulate pack opening animation
+
         setTimeout(() => {
+            // Step 1: Open the pack and update user's collection
+            user.openBoosterPack();
+
+            // Step 2: Get all users from localStorage
+            const allUsersRaw = localStorage.getItem("users");
+            if (allUsersRaw) {
+                const allUsers = JSON.parse(allUsersRaw);
+
+                // Step 3: Manually find and replace the matching user
+                for (let i = 0; i < allUsers.length; i++) {
+                    if (allUsers[i]._email === user.email) {
+                        allUsers[i] = user;
+                        break;
+                    }
+                }
+
+                // Step 4: Save updated list back
+                localStorage.setItem("users", JSON.stringify(allUsers));
+            }
+
+            // Step 5: Update session user
+            localStorage.setItem("loggedInUser", JSON.stringify(user));
+            setUser(User.fromJSON(JSON.parse(JSON.stringify(user))));
             setIsOpening(false);
-            console.log(user?.openBoosterPack());
         }, 2000);
-        console.log(user);
     };
 
     return (
