@@ -1,6 +1,24 @@
-import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, DocumentSnapshot } from 'firebase/firestore';
 import { db } from './firebaseConfig.js';
 import { PokemonCard } from './PokemonCardsClass.js';
+import { 
+  BulbasaurCard, 
+  IvysaurCard, 
+  VenusaurCard, 
+  VenusaurEXCard 
+} from './BulbasaurEvoClass.js';
+import { 
+  CharmanderCard, 
+  CharmeleonCard, 
+  CharizardCard, 
+  CharizardEXCard 
+} from './CharmanderEvoClass.js';
+import { 
+  SquirtleCard, 
+  WartortleCard, 
+  BlastoiseCard, 
+  BlastoiseEXCard 
+} from './SquirtleEvoClass.js';
 
 // Interface for user data structure in Firestore
 export interface UserData {
@@ -24,6 +42,46 @@ export interface ParsedUserData {
   currency: number;
   cardCollection: Map<PokemonCard, number>;
   pfp: string;
+}
+
+// Card class registry for proper deserialization
+const CARD_REGISTRY: { [key: string]: new () => PokemonCard } = {
+  'Bulbasaur': BulbasaurCard,
+  'Ivysaur': IvysaurCard,
+  'Venusaur': VenusaurCard,
+  'Venusaur EX': VenusaurEXCard,
+  'Charmander': CharmanderCard,
+  'Charmeleon': CharmeleonCard,
+  'Charizard': CharizardCard,
+  'Charizard EX': CharizardEXCard,
+  'Squirtle': SquirtleCard,
+  'Wartortle': WartortleCard,
+  'Blastoise': BlastoiseCard,
+  'Blastoise-EX': BlastoiseEXCard
+};
+
+/**
+ * Create a Pokemon card from JSON data using the proper class
+ * @param cardData - JSON representation of a Pokemon card
+ * @returns PokemonCard instance or null if failed
+ */
+function createPokemonCardFromData(cardData: any): PokemonCard | null {
+  try {
+    const pokemonName = cardData._pokemonName;
+    const CardClass = CARD_REGISTRY[pokemonName];
+    
+    if (CardClass) {
+      // Create new instance of the specific card class
+      return new CardClass();
+    } else {
+      // Fallback to generic PokemonCard.fromJSON if class not found
+      console.warn(`Card class not found for ${pokemonName}, using generic deserialization`);
+      return PokemonCard.fromJSON(cardData);
+    }
+  } catch (error) {
+    console.error('Error creating Pokemon card from data:', error);
+    return null;
+  }
 }
 
 /**
@@ -83,7 +141,7 @@ export async function getParsedUserData(userId: string): Promise<ParsedUserData 
       for (const cardEntry of userData.cards) {
         try {
           if (cardEntry.cardData && typeof cardEntry.count === 'number') {
-            const pokemonCard = PokemonCard.fromJSON(cardEntry.cardData);
+            const pokemonCard = createPokemonCardFromData(cardEntry.cardData);
             if (pokemonCard) {
               cardCollection.set(pokemonCard, cardEntry.count);
             } else {
@@ -107,6 +165,104 @@ export async function getParsedUserData(userId: string): Promise<ParsedUserData 
   } catch (error) {
     console.error('Error parsing user data:', error);
     return null;
+  }
+}
+
+/**
+ * Initialize a new user with test card collection
+ * @param userId - The user's UID from Firebase Auth
+ * @param userData - Basic user data (username, email, pfp)
+ * @returns Promise<boolean> - Success status
+ */
+export async function initializeNewUser(
+  userId: string, 
+  userData: { username: string; email: string; pfp?: string }
+): Promise<boolean> {
+  try {
+    // Create test card collection
+    const testCards: CardCollectionEntry[] = [
+      { cardData: new BulbasaurCard().toJSON(), count: 3 },
+      { cardData: new IvysaurCard().toJSON(), count: 2 },
+      { cardData: new VenusaurCard().toJSON(), count: 1 },
+      { cardData: new CharmanderCard().toJSON(), count: 4 },
+      { cardData: new CharmeleonCard().toJSON(), count: 2 },
+      { cardData: new CharizardCard().toJSON(), count: 1 },
+      { cardData: new CharizardEXCard().toJSON(), count: 1 },
+      { cardData: new SquirtleCard().toJSON(), count: 3 },
+      { cardData: new WartortleCard().toJSON(), count: 1 },
+      { cardData: new BlastoiseCard().toJSON(), count: 1 },
+      { cardData: new VenusaurEXCard().toJSON(), count: 1 }
+    ];
+
+    const newUserData: UserData = {
+      username: userData.username,
+      email: userData.email,
+      currency: 1000, // Starting currency
+      cards: testCards,
+      pfp: userData.pfp || ''
+    };
+
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, newUserData);
+    
+    console.log(`Initialized new user ${userId} with test collection`);
+    return true;
+    
+  } catch (error) {
+    console.error('Error initializing new user:', error);
+    return false;
+  }
+}
+
+/**
+ * Add cards to user's collection
+ * @param userId - The user's UID from Firebase Auth
+ * @param cardsToAdd - Map of PokemonCard to count to add
+ * @returns Promise<boolean> - Success status
+ */
+export async function addCardsToCollection(
+  userId: string, 
+  cardsToAdd: Map<PokemonCard, number>
+): Promise<boolean> {
+  try {
+    const userData = await getUserData(userId);
+    if (!userData) {
+      console.error('User not found');
+      return false;
+    }
+
+    // Convert existing cards to a map for easier manipulation
+    const existingCards = new Map<string, { cardData: any; count: number }>();
+    userData.cards.forEach(entry => {
+      const cardName = entry.cardData._pokemonName;
+      existingCards.set(cardName, entry);
+    });
+
+    // Add new cards
+    for (const [card, count] of cardsToAdd.entries()) {
+      const cardName = card.pokemonName;
+      if (existingCards.has(cardName)) {
+        existingCards.get(cardName)!.count += count;
+      } else {
+        existingCards.set(cardName, {
+          cardData: card.toJSON(),
+          count: count
+        });
+      }
+    }
+
+    // Convert back to array
+    const updatedCards = Array.from(existingCards.values());
+
+    // Update user data
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, { ...userData, cards: updatedCards });
+    
+    return true;
+    
+  } catch (error) {
+    console.error('Error adding cards to collection:', error);
+    return false;
   }
 }
 
@@ -166,4 +322,27 @@ export async function getUserCardCollection(userId: string): Promise<Map<Pokemon
     console.error('Error fetching user card collection:', error);
     return null;
   }
+}
+
+/**
+ * Create a starter collection for testing
+ * @returns Map<PokemonCard, number> - Starter collection
+ */
+export function createStarterCollection(): Map<PokemonCard, number> {
+  const collection = new Map<PokemonCard, number>();
+  
+  // Add starter Pokemon with various counts
+  collection.set(new BulbasaurCard(), 3);
+  collection.set(new IvysaurCard(), 2);
+  collection.set(new VenusaurCard(), 1);
+  collection.set(new CharmanderCard(), 4);
+  collection.set(new CharmeleonCard(), 2);
+  collection.set(new CharizardCard(), 1);
+  collection.set(new CharizardEXCard(), 1);
+  collection.set(new SquirtleCard(), 3);
+  collection.set(new WartortleCard(), 1);
+  collection.set(new BlastoiseCard(), 1);
+  collection.set(new VenusaurEXCard(), 1);
+  
+  return collection;
 }

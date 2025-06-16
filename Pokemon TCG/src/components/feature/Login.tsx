@@ -4,14 +4,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FaGoogle } from 'react-icons/fa';
 import './login.css';
-import { 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signInWithPopup, 
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signInWithPopup,
     GoogleAuthProvider,
-    updateProfile 
+    updateProfile
 } from "firebase/auth";
 import { auth } from "../assets/firebaseConfig";
+import { userExists, initializeNewUser } from "../assets/firebaseUtils";
 
 interface UserData {
     username: string;
@@ -38,7 +39,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        
+
         const trimmedUsername = username.trim();
         const trimmedEmail = email.trim();
         const trimmedPassword = password.trim();
@@ -59,25 +60,25 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
         try {
             // Create user with Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
-            
+
             // Update the user's display name
             await updateProfile(userCredential.user, {
                 displayName: trimmedUsername
             });
 
-            // Set user data in your app state
-            const userData = {
+            // Initialize user in Firestore
+            await initializeNewUser(userCredential.user.uid, {
                 username: trimmedUsername,
                 email: trimmedEmail,
-                password: '' // Don't store password in state
-            };
+                pfp: ''
+            });
 
-            setUserData(userData);
-            setIsLoggedIn(true);
-            navigate('/');
+            // The UserContext will handle the rest via onAuthStateChanged
+            // No need to manually set login state here
+
         } catch (error: any) {
             let errorMessage = 'Registration failed';
-            
+
             switch (error.code) {
                 case 'auth/email-already-in-use':
                     errorMessage = 'This email is already registered. Please use a different email or try logging in.';
@@ -91,7 +92,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                 default:
                     errorMessage = error.message;
             }
-            
+
             alert(errorMessage);
         } finally {
             setLoading(false);
@@ -101,26 +102,27 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        
+
         const trimmedEmail = email.trim();
         const trimmedPassword = password.trim();
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
             const user = userCredential.user;
-            
+
             const userData = {
                 username: user.displayName || user.email?.split('@')[0] || 'User',
                 email: user.email || '',
-                password: '' // Don't store password in state
+                password: ''
             };
 
             setUserData(userData);
             setIsLoggedIn(true);
             navigate('/');
+
         } catch (error: any) {
             let errorMessage = 'Login failed';
-            
+
             switch (error.code) {
                 case 'auth/user-not-found':
                     errorMessage = 'No account found with this email. Please register first.';
@@ -137,7 +139,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                 default:
                     errorMessage = error.message;
             }
-            
+
             alert(errorMessage);
         } finally {
             setLoading(false);
@@ -146,23 +148,24 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
 
     const handleGoogleSignIn = async () => {
         setLoading(true);
-        
+
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
-            
-            const userData = {
-                username: user.displayName || user.email?.split('@')[0] || 'User',
-                email: user.email || '',
-                password: '' // Google auth doesn't provide password
-            };
 
-            setUserData(userData);
-            setIsLoggedIn(true);
-            navigate('/');
+            // Check if this is a new user and initialize if needed
+            const exists = await userExists(user.uid);
+            if (!exists) {
+                await initializeNewUser(user.uid, {
+                    username: user.displayName || user.email?.split('@')[0] || 'User',
+                    email: user.email || '',
+                    pfp: user.photoURL || ''
+                });
+            }
+
         } catch (error: any) {
             let errorMessage = 'Google sign-in failed';
-            
+
             switch (error.code) {
                 case 'auth/popup-closed-by-user':
                     errorMessage = 'Sign-in cancelled. Please try again.';
@@ -173,7 +176,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                 default:
                     errorMessage = error.message;
             }
-            
+
             alert(errorMessage);
         } finally {
             setLoading(false);
@@ -189,7 +192,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
             <div className='formBox login'>
                 <form onSubmit={handleLogin}>
                     <h1>Login</h1>
-                    
+
                     <div className='inputBox'>
                         <input
                             type='email'
@@ -201,7 +204,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                         />
                         <FontAwesomeIcon className='icon' icon={faEnvelope} />
                     </div>
-                    
+
                     <div className='inputBox'>
                         <input
                             type={showPassword ? 'text' : 'password'}
@@ -212,15 +215,15 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                             disabled={loading}
                         />
                         <button type="button" onClick={toggleShowPassword} disabled={loading}>
-                            <FontAwesomeIcon 
-                                className='icon' 
-                                icon={showPassword ? faEyeSlash : faEye} 
-                                id='eye' 
+                            <FontAwesomeIcon
+                                className='icon'
+                                icon={showPassword ? faEyeSlash : faEye}
+                                id='eye'
                             />
                         </button>
                         <FontAwesomeIcon className='icon' icon={faLock} />
                     </div>
-                    
+
                     <div className='rememberForgot'>
                         <label>
                             <input className='checkbox' type='checkbox' disabled={loading} />
@@ -228,15 +231,15 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                         </label>
                         <a href='#'>Forgot Password?</a>
                     </div>
-                    
+
                     <button className='submit' type='submit' disabled={loading}>
                         {loading ? 'Signing in...' : 'Login'}
                     </button>
-                    
+
                     <div className='google-signin'>
-                        <button 
-                            type='button' 
-                            className='google-btn' 
+                        <button
+                            type='button'
+                            className='google-btn'
                             onClick={handleGoogleSignIn}
                             disabled={loading}
                         >
@@ -244,17 +247,17 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                             Sign in with Google
                         </button>
                     </div>
-                    
+
                     <div className='register'>
                         <p>Don't have an account? <a href='#' onClick={registerLink}>Register</a></p>
                     </div>
                 </form>
             </div>
-            
+
             <div className='formBox register'>
                 <form onSubmit={handleRegister}>
                     <h1>Create Account</h1>
-                    
+
                     <div className='inputBox'>
                         <input
                             type='text'
@@ -266,7 +269,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                         />
                         <FontAwesomeIcon className='icon' icon={faEnvelope} />
                     </div>
-                    
+
                     <div className='inputBox'>
                         <input
                             type='email'
@@ -278,7 +281,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                         />
                         <FontAwesomeIcon className='icon' icon={faEnvelope} />
                     </div>
-                    
+
                     <div className='inputBox'>
                         <input
                             type={showPassword ? 'text' : 'password'}
@@ -289,38 +292,38 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                             disabled={loading}
                         />
                         <button type="button" onClick={toggleShowPassword} disabled={loading}>
-                            <FontAwesomeIcon 
-                                className='icon' 
-                                icon={showPassword ? faEyeSlash : faEye} 
-                                id='eye' 
+                            <FontAwesomeIcon
+                                className='icon'
+                                icon={showPassword ? faEyeSlash : faEye}
+                                id='eye'
                             />
                         </button>
                         <FontAwesomeIcon className='icon' icon={faLock} />
                     </div>
-                    
+
                     <div className='rememberForgot'>
                         <label>
                             <input className='checkbox' type='checkbox' required disabled={loading} />
                             I agree to the terms & conditions
                         </label>
                     </div>
-                    
+
                     <button className='submit' type='submit' disabled={loading}>
                         {loading ? 'Creating Account...' : 'Register'}
                     </button>
-                    
+
                     <div className='google-signin'>
-                        <button 
-                            type='button' 
-                            className='google-btn' 
+                        <button
+                            type='button'
+                            className='google-btn'
                             onClick={handleGoogleSignIn}
                             disabled={loading}
                         >
-                            <FaGoogle/>
+                            <FaGoogle />
                             Sign up with Google
                         </button>
                     </div>
-                    
+
                     <div className='register'>
                         <p>Already have an account? <a href='#' onClick={loginLink}>Log In</a></p>
                     </div>
