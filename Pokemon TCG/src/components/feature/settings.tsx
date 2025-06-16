@@ -1,3 +1,5 @@
+// Settings has to be changed so that it uses the firebase user info and not the local storage information
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './settings.css';

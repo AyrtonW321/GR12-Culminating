@@ -20,10 +20,6 @@ interface NavBarProps {
 
 const NavBar: React.FC<NavBarProps> = ({
     onSettingsClick,
-    isLoggedIn,
-    setIsLoggedIn,
-    handleSignOut,
-    userData,
     hourglassCount
 }) => {
     return (
