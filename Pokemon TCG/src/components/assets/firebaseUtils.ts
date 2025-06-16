@@ -20,6 +20,14 @@ import {
   BlastoiseEXCard 
 } from './SquirtleEvoClass.js';
 
+export async function getUserProfileData(uid: string) {
+  const docRef = doc(db, 'user', uid);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) throw new Error("User data not found");
+
+  return docSnap.data();
+}
+
 // Interface for user data structure in Firestore
 export interface UserData {
   username: string;
@@ -346,3 +354,20 @@ export function createStarterCollection(): Map<PokemonCard, number> {
   
   return collection;
 }
+
+export async function createUserData({ uid, email, username }: { uid: string; email: string; username: string }) {
+  await setDoc(doc(db, 'users', uid), {
+    username,
+    email,
+    currency: 0,
+    cards: [],
+    pfp: ''
+  });
+}
+
+await updateDoc(userRef, {
+  cards: arrayUnion({
+    cardData: { pokemonName: 'Squirtle', type: 'Water', hp: 50 },
+    count: 1
+  })
+});

@@ -1,18 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { UserStats } from '../assets/UserStatsClass';
+import { useUser } from '../feature/usercontext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../assets/firebaseConfig';
 import './profile.css';
 
-interface UserData {
-    username: string;
-    email: string;
-    password: string;
-}
-
-interface ProfileProps {
-    userData?: UserData;
-}
-
-const Profile = ({ userData }: ProfileProps) => {
+const Profile = () => {
+    const { user } = useUser(); // pull from context
     const [displayName, setDisplayName] = useState<string>('PokemonTrainer');
     const [userStats, setUserStats] = useState<UserStats>(new UserStats());
     const [collectedCards, setCollectedCards] = useState<number>(0);
@@ -20,38 +14,38 @@ const Profile = ({ userData }: ProfileProps) => {
     const [email, setEmail] = useState<string>('');
 
     useEffect(() => {
-        if (userData) {
-            const storedDisplayName = localStorage.getItem(`displayName_${userData.username}`) || userData.username;
-            const storedProfileImage = localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png';
-            const storedEmail = localStorage.getItem(`userEmail_${userData.username}`) || userData.email;
-            const storedStats = localStorage.getItem(`userStats_${userData.username}`);
-            const storedCards = localStorage.getItem(`collectedCards_${userData.username}`);
-            
-            setDisplayName(storedDisplayName);
-            setProfileImage(storedProfileImage);
-            setEmail(storedEmail);
-            setCollectedCards(storedCards ? parseInt(storedCards) : 0);
-            
-            if (storedStats) {
-                const stats = JSON.parse(storedStats);
-                setUserStats(new UserStats(stats.wins, stats.losses, stats.currentStreak));
-            } else {
-                const loadedStats = new UserStats(1, 1, 1);
-                setUserStats(loadedStats);
-            }
-        }
-    }, [userData]);
+        const loadUserProfile = async () => {
+            try {
+                if (!user) return;
 
-    const saveStatsToStorage = () => {
-        if (userData) {
-            localStorage.setItem(`userStats_${userData.username}`, JSON.stringify({
-                wins: userStats.wins,
-                losses: userStats.losses,
-                currentStreak: userStats.currentStreak
-            }));
-            localStorage.setItem(`collectedCards_${userData.username}`, collectedCards.toString());
-        }
-    };
+                const userRef = doc(db, 'user', user.uid);
+                const userDoc = await getDoc(userRef);
+                if (!userDoc.exists()) return;
+                const data = userDoc.data();
+
+                setDisplayName(data.username || 'PokemonTrainer');
+                setEmail(data.email || '');
+                setProfileImage(data.pfp || '/default-pfp.png');
+
+                // Stats
+                if (data.stats) {
+                    const { wins, losses, currentStreak } = data.stats;
+                    setUserStats(new UserStats(wins || 0, losses || 0, currentStreak || 0));
+                }
+
+                // Card collection count
+                if (data.cards && Array.isArray(data.cards)) {
+                    const total = data.cards.reduce((sum: number, entry: any) => sum + (entry.count || 0), 0);
+                    setCollectedCards(total);
+                }
+
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+            }
+        };
+
+        loadUserProfile();
+    }, [user]);
 
     return (
         <div className="profile-container">
