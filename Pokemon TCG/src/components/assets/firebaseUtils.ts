@@ -365,6 +365,10 @@ export async function createUserData({ uid, email, username }: { uid: string; em
   });
 }
 
+import { updateDoc, arrayUnion } from 'firebase/firestore';
+
+const userRef = doc(db, 'users', user.uid);
+
 await updateDoc(userRef, {
   cards: arrayUnion({
     cardData: { pokemonName: 'Squirtle', type: 'Water', hp: 50 },
