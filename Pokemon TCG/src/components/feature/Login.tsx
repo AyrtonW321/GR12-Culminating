@@ -12,20 +12,25 @@ import {
     updateProfile
 } from "firebase/auth";
 import { auth } from "../assets/firebaseConfig";
-import { userExists, initializeNewUser } from "../assets/firebaseUtils";
 
 interface UserData {
     username: string;
     email: string;
     password: string;
+    profileImage?: string;
+    wins?: number;
+    losses?: number;
+    currentStreak?: number;
+    collectedCards?: number;
 }
 
 interface LoginProps {
     setIsLoggedIn: (value: boolean) => void;
     setUserData: (user: UserData) => void;
+    initializeUserInLocalStorage: (firebaseUser: any, additionalData?: Partial<UserData>) => UserData;
 }
 
-const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
+const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUserInLocalStorage }) => {
     const [action, setAction] = useState('');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -66,15 +71,16 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
                 displayName: trimmedUsername
             });
 
-            // Initialize user in Firestore
-            await initializeNewUser(userCredential.user.uid, {
+            // Initialize user in local storage
+            const userData = initializeUserInLocalStorage(userCredential.user, {
                 username: trimmedUsername,
                 email: trimmedEmail,
-                pfp: ''
+                profileImage: '/default-pfp.png'
             });
 
-            // The UserContext will handle the rest via onAuthStateChanged
-            // No need to manually set login state here
+            setUserData(userData);
+            setIsLoggedIn(true);
+            navigate('/');
 
         } catch (error: any) {
             let errorMessage = 'Registration failed';
@@ -110,11 +116,16 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
             const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
             const user = userCredential.user;
 
-            const userData = {
-                username: user.displayName || user.email?.split('@')[0] || 'User',
-                email: user.email || '',
-                password: ''
-            };
+            // Get or initialize user data from local storage
+            const userId = user.uid;
+            const storedUser = localStorage.getItem(`user_${userId}`);
+            
+            let userData: UserData;
+            if (storedUser) {
+                userData = JSON.parse(storedUser);
+            } else {
+                userData = initializeUserInLocalStorage(user);
+            }
 
             setUserData(userData);
             setIsLoggedIn(true);
@@ -153,15 +164,16 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData }) => {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
 
-            // Check if this is a new user and initialize if needed
-            const exists = await userExists(user.uid);
-            if (!exists) {
-                await initializeNewUser(user.uid, {
-                    username: user.displayName || user.email?.split('@')[0] || 'User',
-                    email: user.email || '',
-                    pfp: user.photoURL || ''
-                });
-            }
+            // Initialize or get user data from local storage
+            const userData = initializeUserInLocalStorage(user, {
+                username: user.displayName || user.email?.split('@')[0] || 'User',
+                email: user.email || '',
+                profileImage: user.photoURL || '/default-pfp.png'
+            });
+
+            setUserData(userData);
+            setIsLoggedIn(true);
+            navigate('/');
 
         } catch (error: any) {
             let errorMessage = 'Google sign-in failed';

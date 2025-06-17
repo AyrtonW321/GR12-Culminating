@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './components/assets/firebaseConfig';
-import { userExists, initializeNewUser, getUserProfile } from './components/assets/firebaseUtils';
 import './App.css';
 
 import MainPage from './components/pages/mainpage';
@@ -20,6 +19,11 @@ interface UserData {
   username: string;
   email: string;
   password: string;
+  profileImage?: string;
+  wins?: number;
+  losses?: number;
+  currentStreak?: number;
+  collectedCards?: number;
 }
 
 function App() {
@@ -29,30 +33,58 @@ function App() {
   const [hourglassCount, setHourglassCount] = useState<number>(0);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Initialize user data in local storage
+  const initializeUserInLocalStorage = (firebaseUser: any, additionalData?: Partial<UserData>) => {
+    const userId = firebaseUser.uid;
+    const username = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
+    const email = firebaseUser.email || '';
+    
+    const userData = {
+      userId,
+      username,
+      email,
+      password: '',
+      profileImage: firebaseUser.photoURL || '/default-pfp.png',
+      wins: 0,
+      losses: 0,
+      currentStreak: 0,
+      collectedCards: 0,
+      ...additionalData
+    };
+
+    // Store in local storage
+    localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
+    localStorage.setItem(`profileImage_${username}`, userData.profileImage);
+    localStorage.setItem(`displayName_${username}`, userData.username);
+    localStorage.setItem(`userEmail_${username}`, userData.email);
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    
+    return userData;
+  };
+
+  // Get user data from local storage
+  const getUserFromLocalStorage = (firebaseUser: any) => {
+    const userId = firebaseUser.uid;
+    const storedUser = localStorage.getItem(`user_${userId}`);
+    
+    if (storedUser) {
+      return JSON.parse(storedUser);
+    }
+    
+    // If not found, initialize
+    return initializeUserInLocalStorage(firebaseUser);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setAuthLoading(true);
 
       if (firebaseUser) {
         try {
-          const exists = await userExists(firebaseUser.uid);
-          if (!exists) {
-            await initializeNewUser(firebaseUser.uid, {
-              username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-              email: firebaseUser.email || '',
-              pfp: firebaseUser.photoURL || ''
-            });
-          }
-
-          const profileData = await getUserProfile(firebaseUser.uid);
-          if (profileData) {
-            setUserData({
-              username: profileData.username,
-              email: profileData.email,
-              password: ''
-            });
-            setIsLoggedIn(true);
-          }
+          const localUserData = getUserFromLocalStorage(firebaseUser);
+          
+          setUserData(localUserData);
+          setIsLoggedIn(true);
         } catch (error) {
           console.error('Error setting up user:', error);
           setIsLoggedIn(false);
@@ -60,6 +92,7 @@ function App() {
       } else {
         setIsLoggedIn(false);
         setUserData({ username: '', email: '', password: '' });
+        localStorage.removeItem('currentUser');
       }
 
       setAuthLoading(false);
@@ -71,6 +104,7 @@ function App() {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
+      localStorage.removeItem('currentUser');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -78,6 +112,22 @@ function App() {
 
   const handleHourglassUpdate = (newAmount: number) => {
     setHourglassCount(newAmount);
+  };
+
+  const handleUserDataUpdate = (newUserData: UserData) => {
+    if (auth.currentUser) {
+      const userId = auth.currentUser.uid;
+      
+      // Update local storage
+      localStorage.setItem(`user_${userId}`, JSON.stringify(newUserData));
+      localStorage.setItem(`profileImage_${newUserData.username}`, newUserData.profileImage || '/default-pfp.png');
+      localStorage.setItem(`displayName_${newUserData.username}`, newUserData.username);
+      localStorage.setItem(`userEmail_${newUserData.username}`, newUserData.email);
+      localStorage.setItem('currentUser', JSON.stringify(newUserData));
+      
+      // Update state
+      setUserData(newUserData);
+    }
   };
 
   if (authLoading) {
@@ -95,7 +145,7 @@ function App() {
           <Routes>
             <Route
               path="/login"
-              element={<Login setIsLoggedIn={setIsLoggedIn} setUserData={setUserData} />}
+              element={<Login setIsLoggedIn={setIsLoggedIn} setUserData={setUserData} initializeUserInLocalStorage={initializeUserInLocalStorage} />}
             />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
@@ -114,6 +164,7 @@ function App() {
                 closeModal={() => setShowSettings(false)}
                 isLoggedIn={isLoggedIn}
                 userData={userData}
+                onUserDataUpdate={handleUserDataUpdate}
               />
             )}
 
@@ -123,6 +174,7 @@ function App() {
                 element={
                   <MainPage
                     isLoggedIn={isLoggedIn}
+                    userData={userData}
                   />
                 }
               />
@@ -131,15 +183,32 @@ function App() {
                 element={
                   <Collection
                     isLoggedIn={isLoggedIn}
+                    // userData={userData}
                   />
                 }
               />
-              <Route path="/battle" element={<Battle />} />
+              <Route
+                path="/battle"
+                element={
+                  <Battle />
+                }
+              />
               <Route
                 path="/store"
-                element={<Store onHourglassUpdate={handleHourglassUpdate} />}
+                element={
+                  <Store
+                    onHourglassUpdate={handleHourglassUpdate}
+                  />
+                }
               />
-              <Route path="/profile" element={<Profile />} />
+              <Route
+                path="/profile"
+                element={
+                  <Profile
+                    userData={userData}
+                  />
+                }
+              />
               <Route
                 path="/account"
                 element={
@@ -147,6 +216,7 @@ function App() {
                     userData={userData}
                     setIsLoggedIn={setIsLoggedIn}
                     setUserData={setUserData}
+                    onUserDataUpdate={handleUserDataUpdate}
                   />
                 }
               />

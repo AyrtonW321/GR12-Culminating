@@ -1,19 +1,25 @@
-// Settings has to be changed so that it uses the firebase user info and not the local storage information
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../assets/firebaseConfig';
+import { updateProfile } from 'firebase/auth';
 import './settings.css';
 
 interface UserData {
     username: string;
     email: string;
     password: string;
+    profileImage?: string;
+    wins?: number;
+    losses?: number;
+    currentStreak?: number;
+    collectedCards?: number;
 }
 
 interface SettingsProps {
     closeModal: () => void;
     isLoggedIn: boolean;
     userData: UserData;
+    onUserDataUpdate: (userData: UserData) => void;
 }
 
 interface FormData {
@@ -22,13 +28,14 @@ interface FormData {
     profileImage: string;
 }
 
-const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
+const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: SettingsProps) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState<FormData>({
         username: userData.username,
         email: userData.email,
-        profileImage: localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png'
+        profileImage: userData.profileImage || '/default-pfp.png'
     });
+    const [loading, setLoading] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -53,29 +60,40 @@ const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
-        localStorage.setItem(`profileImage_${userData.username}`, formData.profileImage);
-        localStorage.setItem(`displayName_${userData.username}`, formData.username);
-        localStorage.setItem(`userEmail_${userData.username}`, formData.email);
-        
-        const updatedUserData = {
-            ...userData,
-            username: formData.username,
-            email: formData.email
-        };
-        
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const userIndex = users.findIndex((user: any) => user.username === userData.username);
-        if (userIndex !== -1) {
-            users[userIndex] = updatedUserData;
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+        setLoading(true);
+
+        try {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                // Update Firebase Auth display name if changed
+                if (formData.username !== userData.username) {
+                    await updateProfile(currentUser, {
+                        displayName: formData.username
+                    });
+                }
+
+                // Update user data
+                const updatedUserData = {
+                    ...userData,
+                    username: formData.username,
+                    email: formData.email,
+                    profileImage: formData.profileImage
+                };
+
+                // Update via parent component (which updates local storage)
+                onUserDataUpdate(updatedUserData);
+            }
+
+            alert('Settings saved successfully!');
+            closeModal();
+        } catch (error: any) {
+            console.error('Error updating settings:', error);
+            alert('Error updating settings: ' + error.message);
+        } finally {
+            setLoading(false);
         }
-        
-        alert('Settings saved successfully!');
-        closeModal();
     };
 
     const handleAccountClick = () => {
@@ -104,6 +122,7 @@ const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
                                     accept="image/*" 
                                     onChange={handleImageChange}
                                     style={{ display: 'none' }}
+                                    disabled={loading}
                                 />
                             </label>
                         </div>
@@ -119,6 +138,8 @@ const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
                             onChange={handleInputChange}
                             placeholder="Enter your display name"
                             autoComplete='off'
+                            disabled={loading}
+                            required
                         />
                     </div>
 
@@ -132,17 +153,20 @@ const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
                             onChange={handleInputChange}
                             placeholder="Enter your email"
                             autoComplete='off'
+                            disabled={loading}
+                            required
                         />
                     </div>
 
                     <div className='buttonContainer'>
-                        <button type="submit" className="saveButton">
-                            Save Settings
+                        <button type="submit" className="saveButton" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save Settings'}
                         </button>
                         <button 
                             type="button" 
                             className="accountButton"
                             onClick={handleAccountClick}
+                            disabled={loading}
                         >
                             Account Details
                         </button>

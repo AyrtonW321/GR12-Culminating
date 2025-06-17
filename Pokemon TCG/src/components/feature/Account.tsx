@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './login.css';
@@ -15,15 +16,21 @@ interface UserData {
     username: string;
     email: string;
     password: string;
+    profileImage?: string;
+    wins?: number;
+    losses?: number;
+    currentStreak?: number;
+    collectedCards?: number;
 }
 
 interface AccountProps {
     userData: UserData;
     setIsLoggedIn: (value: boolean) => void;
     setUserData: (data: UserData) => void;
+    onUserDataUpdate: (userData: UserData) => void;
 }
 
-const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData }) => {
+const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData, onUserDataUpdate }) => {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [newUsername, setNewUsername] = useState(userData.username);
@@ -36,6 +43,7 @@ const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData 
             await signOut(auth);
             setIsLoggedIn(false);
             setUserData({ username: '', email: '', password: '' });
+            localStorage.removeItem('currentUser');
             navigate('/login');
         } catch (error: any) {
             alert(`Error signing out: ${error.message}`);
@@ -66,12 +74,17 @@ const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData 
                 await updatePassword(currentUser, newPassword);
             }
 
-            // Update local state
-            setUserData({
+            // Update local user data
+            const updatedUserData = {
+                ...userData,
                 username: newUsername,
                 email: userData.email,
                 password: '' // Don't store password in state
-            });
+            };
+
+            // Update via parent component (which updates local storage)
+            onUserDataUpdate(updatedUserData);
+            setUserData(updatedUserData);
 
             setCurrentPassword('');
             setNewPassword('');
@@ -122,6 +135,14 @@ const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData 
                 password
             );
             await reauthenticateWithCredential(currentUser, credential);
+            
+            // Clear local storage data
+            const userId = currentUser.uid;
+            localStorage.removeItem(`user_${userId}`);
+            localStorage.removeItem(`profileImage_${userData.username}`);
+            localStorage.removeItem(`displayName_${userData.username}`);
+            localStorage.removeItem(`userEmail_${userData.username}`);
+            localStorage.removeItem('currentUser');
             
             // Delete the user
             await deleteUser(currentUser);

@@ -9,6 +9,11 @@ import "./mainPage.css";
 
 interface MainPageProps {
   isLoggedIn: boolean;
+  userData: {
+    username: string;
+    email: string;
+    password: string;
+  };
 }
 
 const MainPage: React.FC<MainPageProps> = ({ isLoggedIn }) => {
