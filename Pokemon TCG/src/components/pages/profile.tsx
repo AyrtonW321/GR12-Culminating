@@ -18,7 +18,7 @@ const Profile = () => {
             try {
                 if (!user) return;
 
-                const userRef = doc(db, 'user', user.uid);
+                const userRef = doc(db, 'users', user.username);
                 const userDoc = await getDoc(userRef);
                 if (!userDoc.exists()) return;
                 const data = userDoc.data();
@@ -27,22 +27,20 @@ const Profile = () => {
                 setEmail(data.email || '');
                 setProfileImage(data.pfp || '/default-pfp.png');
 
-                // Stats
                 if (data.stats) {
                     const { wins, losses, currentStreak } = data.stats;
                     setUserStats(new UserStats(wins || 0, losses || 0, currentStreak || 0));
                 }
 
-                // Card collection count
                 if (data.cards && Array.isArray(data.cards)) {
                     const total = data.cards.reduce((sum: number, entry: any) => sum + (entry.count || 0), 0);
                     setCollectedCards(total);
                 }
-
             } catch (error) {
                 console.error('Error loading profile data:', error);
             }
         };
+
 
         loadUserProfile();
     }, [user]);
@@ -51,9 +49,9 @@ const Profile = () => {
         <div className="profile-container">
             <div className="profile-header">
                 <div className="pfp-container">
-                    <img 
-                        src={profileImage} 
-                        alt="Profile" 
+                    <img
+                        src={profileImage}
+                        alt="Profile"
                         className="profile-image"
                     />
                 </div>

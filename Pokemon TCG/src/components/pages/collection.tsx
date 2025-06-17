@@ -12,9 +12,13 @@ interface CollectionFilters {
   sortOrder: 'asc' | 'desc';
 }
 
-const Collection: React.FC = () => {
-  const { user, isLoggedIn, isLoading, cardCollection, error, refreshUserData } = useUser();
-  
+interface CollectionProps {
+  isLoggedIn: boolean;
+}
+
+const Collection: React.FC<CollectionProps> = ({ isLoggedIn }) => {
+  const { user, isLoading, cardCollection, error, refreshUserData } = useUser();
+
   const [filters, setFilters] = useState<CollectionFilters>({
     name: '',
     type: '',

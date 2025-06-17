@@ -7,12 +7,16 @@ import { PokemonCard } from '../assets/PokemonCardsClass';
 import { BulbasaurCard, IvysaurCard, VenusaurCard, VenusaurEXCard } from '../assets/BulbasaurEvoClass';
 import "./mainPage.css";
 
-const MainPage = () => {
+interface MainPageProps {
+  isLoggedIn: boolean;
+}
+
+const MainPage: React.FC<MainPageProps> = ({ isLoggedIn }) => {
     const [isOpening, setIsOpening] = useState<boolean>(false);
     const [showMissions, setShowMissions] = useState<boolean>(false);
     const [openedCards, setOpenedCards] = useState<PokemonCard[]>([]);
     const [showCards, setShowCards] = useState<boolean>(false);
-    const { user, isLoggedIn, isLoading, error, refreshUserData } = useUser();
+    const { user, isLoading, error, refreshUserData } = useUser();
 
     // Redirect to login if not authenticated
     useEffect(() => {
