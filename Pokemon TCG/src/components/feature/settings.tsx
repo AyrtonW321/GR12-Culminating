@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { auth } from '../assets/firebaseConfig';
 import { updateProfile } from 'firebase/auth';
 import './settings.css';
-import { auth } from '../assets/firebaseConfig';
-import { updateProfile } from 'firebase/auth';
-
 interface UserData {
     username: string;
     email: string;
@@ -56,7 +53,7 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
                 if (event.target?.result) {
                     setFormData(prev => ({
                         ...prev,
-                        profileImage: event.target.result as string
+                        profileImage: event.target?.result as string
                     }));
                 }
             };

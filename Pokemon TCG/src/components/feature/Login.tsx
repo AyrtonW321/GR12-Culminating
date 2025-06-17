@@ -74,8 +74,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
             const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
             await updateProfile(userCredential.user, { displayName: trimmedUsername });
 
-            // Initialize user in Firestore
-            await initializeNewUser(userCredential.user.uid, {
+            const newUser: UserData = {
                 username: trimmedUsername,
                 email: trimmedEmail,
                 password: trimmedPassword
