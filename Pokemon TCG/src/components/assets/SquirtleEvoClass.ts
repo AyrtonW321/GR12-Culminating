@@ -88,7 +88,7 @@ export class BlastoiseEXCard extends PokemonCard {
             180,                    // HP (higher for EX)
             4,                      // retreatCost (higher for EX)
             "electric",             // weakness
-            "blastoise-ex.png",     // pokemonPhoto
+            "blastoise_ex.png",     // pokemonPhoto
             "EX version of Blastoise with devastating water attacks.", // description
             4,                      // rarity (higher for EX)
             pokedexInfo,            // pokedexInfo

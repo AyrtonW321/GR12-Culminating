@@ -18,117 +18,48 @@ interface MainPageProps {
 
 const MainPage: React.FC<MainPageProps> = ({ isLoggedIn }) => {
     const [isOpening, setIsOpening] = useState<boolean>(false);
-    const [showMissions, setShowMissions] = useState<boolean>(false);
-    const [openedCards, setOpenedCards] = useState<PokemonCard[]>([]);
-    const [showCards, setShowCards] = useState<boolean>(false);
-    const { user, isLoading, error, refreshUserData } = useUser();
+    const [user, setUser] = useState<User | null>(null);
+    const [openedCards, setOpenedCards] = useState<any[]>([]);
 
     // Redirect to login if not authenticated
     useEffect(() => {
-        if (!isLoading && !isLoggedIn) {
-            console.log("User not logged in");
+        const stored = localStorage.getItem("loggedInUser");
+        if (stored) {
+            setUser(User.fromJSON(JSON.parse(stored)));
         }
-    }, [isLoggedIn, isLoading]);
+    }, []);
 
-    const handleMissionsClick = () => {
-        setShowMissions(true);
-    };
-
-    // Simulate pack opening with random cards
-    const generateRandomCards = (): PokemonCard[] => {
-        const cardPool = [
-            () => new BulbasaurCard(),
-            () => new IvysaurCard(),
-            () => new VenusaurCard(),
-            () => new VenusaurEXCard(),
-        ];
-
-        const cards: PokemonCard[] = [];
-        for (let i = 0; i < 5; i++) {
-            const randomIndex = Math.floor(Math.random() * cardPool.length);
-            // Weight the rarity - make rare cards less common
-            const rarity = Math.random();
-            let selectedCard;
-            
-            if (rarity < 0.5) {
-                selectedCard = new BulbasaurCard(); // Common
-            } else if (rarity < 0.8) {
-                selectedCard = new IvysaurCard(); // Uncommon
-            } else if (rarity < 0.95) {
-                selectedCard = new VenusaurCard(); // Rare
-            } else {
-                selectedCard = new VenusaurEXCard(); // Ultra Rare
-            }
-            
-            cards.push(selectedCard);
-        }
-        return cards;
-    };
-
-    const handleOpenPack = async () => {
-        if (!user) {
-            console.error("No user data available");
-            return;
-        }
+    const handleOpenPack = () => {
+        if (!user || isOpening) return;
 
         setIsOpening(true);
-        
-        // Simulate pack opening animation
-        setTimeout(async () => {
-            const newCards = generateRandomCards();
-            setOpenedCards(newCards);
+
+        setTimeout(() => {
+            // open booster pack
+            let openedCards = user.openBoosterPack();
+            setOpenedCards(openedCards);
+
+            // saves updated uer to currently logged in user
+            localStorage.setItem("loggedInUser", JSON.stringify(user.toJSON()));
+
+            // update the actual users database object
+            const usersRaw = localStorage.getItem("users");
+            if (usersRaw) {
+                const users = JSON.parse(usersRaw);
+
+                // replace the user by finding the username as the key
+                users[user.username] = user.toJSON();
+
+                // save the updated users object
+                localStorage.setItem("users", JSON.stringify(users));
+            }
+
+            // refresh the users state on the app
+            setUser(User.fromJSON(JSON.parse(JSON.stringify(user.toJSON()))));
+
             setIsOpening(false);
-            setShowCards(true);
-            
-            console.log("Opening pack for user:", user.username);
-            console.log("Cards obtained:", newCards.map(card => card.pokemonName));
-            
-            // Refresh user data after opening pack
-            await refreshUserData();
         }, 2000);
     };
-
-    const closeCardDisplay = () => {
-        setShowCards(false);
-        setOpenedCards([]);
-    };
-
-    if (isLoading) {
-        return (
-            <div className="main-container">
-                <div className="loading-message">Loading...</div>
-            </div>
-        );
-    }
-
-    if (!isLoggedIn) {
-        return (
-            <div className="main-container">
-                <div className="login-message">Please log in to access the main page.</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="main-container">
-                <div className="error-message">
-                    {error}
-                    <button onClick={refreshUserData} className="retry-button">
-                        Retry
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="main-container">
-                <div className="error-message">Failed to load user data.</div>
-            </div>
-        );
-    }
 
     return (
         <div className="main-container">
@@ -166,12 +97,28 @@ const MainPage: React.FC<MainPageProps> = ({ isLoggedIn }) => {
             {isOpening && (
                 <div className="pack-opening-animation">
                     <div className="cards-flipping">
-                        {[...Array(5)].map((_, index) => (
+                        {openedCards.map((card, index) => (
                             <div
                                 key={index}
-                                className="card"
+                                className={`card ${isOpening ? "flip" : ""}`}
                                 style={{ animationDelay: `${index * 0.1}s` }}
-                            ></div>
+                            >
+                                <div className="card-inner">
+                                    <div
+                                        className="card-front"
+                                        style={{
+                                            backgroundImage: `url("/cardBack.png")`
+                                        }}
+                                    ></div>
+                                    <div
+                                        className="card-back"
+                                        style={{
+                                            backgroundImage: `url(${card.pokemonPhoto})`,
+                                        }}
+                                        title={card.pokemonName || ""}
+                                    ></div>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>
