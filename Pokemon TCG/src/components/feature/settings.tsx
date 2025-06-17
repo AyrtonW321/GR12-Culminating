@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './login.css';
+import './settings.css';
 import { auth } from '../assets/firebaseConfig';
-import {
-    deleteUser,
-    signOut,
-    updateProfile,
-    updatePassword,
-    EmailAuthProvider,
-    reauthenticateWithCredential
-} from 'firebase/auth';
+import { updateProfile } from 'firebase/auth';
 
 interface UserData {
     username: string;
@@ -17,227 +10,168 @@ interface UserData {
     password: string;
 }
 
-interface AccountProps {
+interface SettingsProps {
+    closeModal: () => void;
+    isLoggedIn: boolean;
     userData: UserData;
-    setIsLoggedIn: (value: boolean) => void;
-    setUserData: (data: UserData) => void;
 }
 
-const Account: React.FC<AccountProps> = ({ userData, setIsLoggedIn, setUserData }) => {
+interface FormData {
+    username: string;
+    email: string;
+    profileImage: string;
+}
+
+const Settings = ({ closeModal, isLoggedIn, userData }: SettingsProps) => {
     const navigate = useNavigate();
     const currentUser = auth.currentUser;
-    const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com');
-    
-    const [isEditing, setIsEditing] = useState(false);
-    const [newUsername, setNewUsername] = useState(userData.username);
-    const [newPassword, setNewPassword] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [loading, setLoading] = useState(false);
 
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth);
-        } catch (err) {
-            console.error('Firebase sign out failed:', err);
-        }
+    const [formData, setFormData] = useState<FormData>({
+        username: currentUser?.displayName || userData.username,
+        email: currentUser?.email || userData.email,
+        profileImage: localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png'
+    });
 
-        setIsLoggedIn(false);
-        setUserData({ username: '', email: '', password: '' });
-        localStorage.removeItem('loggedInUser');
-        navigate('/login');
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
-    const handleUpdateProfile = async () => {
-        if (!currentUser) return;
-
-        setLoading(true);
-        try {
-            if (newUsername !== userData.username) {
-                await updateProfile(currentUser, { displayName: newUsername });
-            }
-
-            if (newPassword && !isGoogleUser) {
-                const credential = EmailAuthProvider.credential(currentUser.email!, currentPassword);
-                await reauthenticateWithCredential(currentUser, credential);
-                await updatePassword(currentUser, newPassword);
-            }
-
-            const updatedUser: UserData = {
-                username: newUsername,
-                email: userData.email,
-                password: '' // don't store actual password
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (event.target?.result) {
+                    setFormData(prev => ({
+                        ...prev,
+                        profileImage: event.target.result as string
+                    }));
+                }
             };
-
-            setUserData(updatedUser);
-            localStorage.setItem('loggedInUser', JSON.stringify(updatedUser));
-
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            users[updatedUser.username] = updatedUser;
-            localStorage.setItem('users', JSON.stringify(users));
-
-            setIsEditing(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            alert('Profile updated!');
-        } catch (error: any) {
-            let message = 'Failed to update profile';
-            if (error.code === 'auth/wrong-password') message = 'Incorrect current password';
-            if (error.code === 'auth/weak-password') message = 'Password is too weak';
-            if (error.code === 'auth/requires-recent-login') message = 'Please log in again before updating profile';
-            alert(message);
-        } finally {
-            setLoading(false);
+            reader.readAsDataURL(e.target.files[0]);
         }
     };
 
-    const handleDeleteAccount = async () => {
-        const confirmDelete = window.confirm('Are you sure you want to delete your account? This cannot be undone.');
-        if (!confirmDelete) return;
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
 
-        const password = isGoogleUser
-            ? null
-            : prompt('Enter your current password to confirm account deletion:');
-        if (!isGoogleUser && !password) return;
+        localStorage.setItem(`profileImage_${userData.username}`, formData.profileImage);
 
-        setLoading(true);
         try {
-            if (!currentUser) throw new Error('No current user');
-
-            if (!isGoogleUser) {
-                const credential = EmailAuthProvider.credential(currentUser.email!, password!);
-                await reauthenticateWithCredential(currentUser, credential);
+            if (currentUser && formData.username !== currentUser.displayName) {
+                await updateProfile(currentUser, {
+                    displayName: formData.username
+                });
+                console.log('Firebase display name updated');
             }
-
-            await deleteUser(currentUser);
-
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            delete users[userData.username];
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.removeItem('loggedInUser');
-
-            setIsLoggedIn(false);
-            setUserData({ username: '', email: '', password: '' });
-            navigate('/login');
-            alert('Account deleted');
-        } catch (error: any) {
-            let message = 'Failed to delete account';
-            if (error.code === 'auth/wrong-password') message = 'Incorrect password';
-            if (error.code === 'auth/requires-recent-login') message = 'Please log in again before deleting account';
-            alert(message);
-        } finally {
-            setLoading(false);
+        } catch (error) {
+            console.error('Error updating display name in Firebase:', error);
         }
+
+        // Update localStorage (backup & consistency)
+        localStorage.setItem(`displayName_${userData.username}`, formData.username);
+        localStorage.setItem(`userEmail_${userData.username}`, formData.email);
+
+        const updatedUserData = {
+            ...userData,
+            username: formData.username,
+            email: formData.email
+        };
+
+        const usersRaw = localStorage.getItem('users');
+        let users = {};
+
+        try {
+            users = usersRaw ? JSON.parse(usersRaw) : {};
+            users[updatedUserData.username] = updatedUserData;
+            localStorage.setItem('users', JSON.stringify(users));
+        } catch (err) {
+            console.error('Failed to update users in localStorage:', err);
+        }
+
+        localStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+
+        alert('Settings saved successfully!');
+        closeModal();
+    };
+
+    const handleAccountClick = () => {
+        closeModal();
+        navigate('/account');
     };
 
     return (
-        <div className='accountContainer'>
-            <h1>My Account</h1>
-            <hr />
-            <div className='accountInfo'>
-                <h2>Personal Information</h2>
-
-                <label htmlFor='enteredUsername'>Username:</label>
-                <div className='inputBox2 userUsername'>
-                    <input
-                        className='enteredUsername'
-                        value={isEditing ? newUsername : userData.username}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                        disabled={!isEditing || loading}
-                    />
-                </div>
-
-                <label htmlFor='enteredEmail'>Email:</label>
-                <div className='inputBox2 userEmail'>
-                    <input
-                        className='enteredEmail'
-                        value={userData.email}
-                        disabled
-                    />
-                </div>
-
-                <label htmlFor='enteredMethod'>Sign-in Method:</label>
-                <div className='inputBox2 userEmail'>
-                    <input
-                        className='enteredEmail'
-                        value={isGoogleUser ? 'Google' : 'Email/Password'}
-                        disabled
-                    />
-                </div>
-
-                {!isGoogleUser && isEditing && (
-                    <>
-                        <label htmlFor='enteredCurrentPassword'>Current Password:</label>
-                        <div className='inputBox2 userPassword'>
-                            <input
-                                type='password'
-                                value={currentPassword}
-                                placeholder='Current password'
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                disabled={loading}
+        <div className="modalOverlay" onClick={closeModal}>
+            <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+                <h1>User Settings</h1>
+                <form onSubmit={handleSubmit} className='userSettingsContainer'>
+                    <div className='profileImageContainer'>
+                        <label>Profile Picture</label>
+                        <div className="pfp-preview">
+                            <img 
+                                src={formData.profileImage} 
+                                alt="Profile Preview" 
+                                className="profile-preview-image"
+                                style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }}
                             />
+                            <label className="change-pfp-button">
+                                Change Picture
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleImageChange}
+                                    style={{ display: 'none' }}
+                                />
+                            </label>
                         </div>
+                    </div>
 
-                        <label htmlFor='enteredNewPassword'>New Password (optional):</label>
-                        <div className='inputBox2 userPassword'>
-                            <input
-                                type='password'
-                                value={newPassword}
-                                placeholder='New password'
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                disabled={loading}
-                            />
-                        </div>
-                    </>
-                )}
-            </div>
-            <hr />
-            <div className='accountButtons'>
-                {!isEditing ? (
-                    <div className='edit-profile'>
-                        <button onClick={() => setIsEditing(true)} disabled={loading}>
-                            Edit Profile
+                    <div className='textInputContainer'>
+                        <label htmlFor="username">Display Name</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleInputChange}
+                            placeholder="Enter your display name"
+                            autoComplete='off'
+                        />
+                    </div>
+
+                    <div className='textInputContainer'>
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Enter your email"
+                            autoComplete='off'
+                            disabled // Firebase doesn't support email change without verification
+                        />
+                    </div>
+
+                    <div className='buttonContainer'>
+                        <button type="submit" className="saveButton">
+                            Save Settings
+                        </button>
+                        <button 
+                            type="button" 
+                            className="accountButton"
+                            onClick={handleAccountClick}
+                        >
+                            Account Details
                         </button>
                     </div>
-                ) : (
-                    <div className='edit-actions'>
-                        <button
-                            onClick={handleUpdateProfile}
-                            disabled={loading || !newUsername.trim()}
-                        >
-                            {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setIsEditing(false);
-                                setNewUsername(userData.username);
-                                setNewPassword('');
-                                setCurrentPassword('');
-                            }}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                )}
-
-                <div className='accountSignOut'>
-                    <button onClick={handleSignOut} disabled={loading}>
-                        Sign Out
-                    </button>
-                </div>
-
-                <div className='accountDelete'>
-                    <button
-                        onClick={handleDeleteAccount}
-                        disabled={loading}
-                        className='delete-btn'
-                    >
-                        {loading ? 'Deleting...' : 'Delete Account'}
-                    </button>
-                </div>
+                </form>
             </div>
         </div>
     );
 };
 
-export default Account;
+export default Settings;
