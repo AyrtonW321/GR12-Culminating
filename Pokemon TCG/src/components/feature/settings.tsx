@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { auth } from '../assets/firebaseConfig';
 import { updateProfile } from 'firebase/auth';
 import './settings.css';
+import { auth } from '../assets/firebaseConfig';
+import { updateProfile } from 'firebase/auth';
 
 interface UserData {
     username: string;
@@ -30,10 +32,12 @@ interface FormData {
 
 const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: SettingsProps) => {
     const navigate = useNavigate();
+    const currentUser = auth.currentUser;
+
     const [formData, setFormData] = useState<FormData>({
-        username: userData.username,
-        email: userData.email,
-        profileImage: userData.profileImage || '/default-pfp.png'
+        username: currentUser?.displayName || userData.username,
+        email: currentUser?.email || userData.email,
+        profileImage: localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png'
     });
     const [loading, setLoading] = useState(false);
 
@@ -52,7 +56,7 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
                 if (event.target?.result) {
                     setFormData(prev => ({
                         ...prev,
-                        profileImage: event.target?.result as string
+                        profileImage: event.target.result as string
                     }));
                 }
             };
@@ -62,38 +66,45 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setLoading(true);
+
+        localStorage.setItem(`profileImage_${userData.username}`, formData.profileImage);
 
         try {
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-                // Update Firebase Auth display name if changed
-                if (formData.username !== userData.username) {
-                    await updateProfile(currentUser, {
-                        displayName: formData.username
-                    });
-                }
-
-                // Update user data
-                const updatedUserData = {
-                    ...userData,
-                    username: formData.username,
-                    email: formData.email,
-                    profileImage: formData.profileImage
-                };
-
-                // Update via parent component (which updates local storage)
-                onUserDataUpdate(updatedUserData);
+            if (currentUser && formData.username !== currentUser.displayName) {
+                await updateProfile(currentUser, {
+                    displayName: formData.username
+                });
+                console.log('Firebase display name updated');
             }
-
-            alert('Settings saved successfully!');
-            closeModal();
-        } catch (error: any) {
-            console.error('Error updating settings:', error);
-            alert('Error updating settings: ' + error.message);
-        } finally {
-            setLoading(false);
+        } catch (error) {
+            console.error('Error updating display name in Firebase:', error);
         }
+
+        // Update localStorage (backup & consistency)
+        localStorage.setItem(`displayName_${userData.username}`, formData.username);
+        localStorage.setItem(`userEmail_${userData.username}`, formData.email);
+
+        const updatedUserData = {
+            ...userData,
+            username: formData.username,
+            email: formData.email
+        };
+
+        const usersRaw = localStorage.getItem('users');
+        let users = {};
+
+        try {
+            users = usersRaw ? JSON.parse(usersRaw) : {};
+            users[updatedUserData.username] = updatedUserData;
+            localStorage.setItem('users', JSON.stringify(users));
+        } catch (err) {
+            console.error('Failed to update users in localStorage:', err);
+        }
+
+        localStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+
+        alert('Settings saved successfully!');
+        closeModal();
     };
 
     const handleAccountClick = () => {

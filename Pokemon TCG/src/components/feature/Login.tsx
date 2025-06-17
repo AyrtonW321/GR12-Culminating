@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FaGoogle } from 'react-icons/fa';
 import './login.css';
+
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -41,6 +42,14 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
 
     const googleProvider = new GoogleAuthProvider();
 
+    const saveToLocalStorage = (user: UserData) => {
+        localStorage.setItem('loggedInUser', JSON.stringify(user));
+        const usersJson = localStorage.getItem('users');
+        const users = usersJson ? JSON.parse(usersJson) : {};
+        users[user.username] = user;
+        localStorage.setItem('users', JSON.stringify(users));
+    };
+
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -49,57 +58,41 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         const trimmedEmail = email.trim();
         const trimmedPassword = password.trim();
 
-        // Basic validation
-        if (trimmedUsername.length < 3) {
-            alert('Username must be at least 3 characters long');
+        if (trimmedUsername.length < 3 || trimmedUsername.length > 15 || trimmedUsername[0] !== trimmedUsername[0].toUpperCase()) {
+            alert('Username must be between 3-15 characters and start with a capital letter.');
             setLoading(false);
             return;
         }
 
-        if (trimmedPassword.length < 6) {
-            alert('Password must be at least 6 characters long');
+        if (trimmedPassword.length < 8 || !/[!@#$%^&*]/.test(trimmedPassword) || trimmedPassword === trimmedPassword.toLowerCase() || !/\d/.test(trimmedPassword)) {
+            alert('Password must be 8+ characters, include a capital letter, special character, and a number.');
             setLoading(false);
             return;
         }
 
         try {
-            // Create user with Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+            await updateProfile(userCredential.user, { displayName: trimmedUsername });
 
-            // Update the user's display name
-            await updateProfile(userCredential.user, {
-                displayName: trimmedUsername
-            });
-
-            // Initialize user in local storage
-            const userData = initializeUserInLocalStorage(userCredential.user, {
+            // Initialize user in Firestore
+            await initializeNewUser(userCredential.user.uid, {
                 username: trimmedUsername,
                 email: trimmedEmail,
-                profileImage: '/default-pfp.png'
-            });
+                password: trimmedPassword
+            };
 
-            setUserData(userData);
+            saveToLocalStorage(newUser);
+            setUserData(newUser);
             setIsLoggedIn(true);
+            alert('Registration successful!');
             navigate('/');
 
         } catch (error: any) {
-            let errorMessage = 'Registration failed';
-
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    errorMessage = 'This email is already registered. Please use a different email or try logging in.';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'Please enter a valid email address.';
-                    break;
-                case 'auth/weak-password':
-                    errorMessage = 'Password is too weak. Please choose a stronger password.';
-                    break;
-                default:
-                    errorMessage = error.message;
-            }
-
-            alert(errorMessage);
+            let message = 'Registration failed';
+            if (error.code === 'auth/email-already-in-use') message = 'Email already in use';
+            if (error.code === 'auth/invalid-email') message = 'Invalid email';
+            if (error.code === 'auth/weak-password') message = 'Weak password';
+            alert(message);
         } finally {
             setLoading(false);
         }
@@ -109,49 +102,26 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         e.preventDefault();
         setLoading(true);
 
-        const trimmedEmail = email.trim();
-        const trimmedPassword = password.trim();
-
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
-            const user = userCredential.user;
+            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+            const firebaseUser = userCredential.user;
 
-            // Get or initialize user data from local storage
-            const userId = user.uid;
-            const storedUser = localStorage.getItem(`user_${userId}`);
-            
-            let userData: UserData;
-            if (storedUser) {
-                userData = JSON.parse(storedUser);
-            } else {
-                userData = initializeUserInLocalStorage(user);
-            }
+            const loadedUser: UserData = {
+                username: firebaseUser.displayName || email.split('@')[0],
+                email: firebaseUser.email || '',
+                password: '' // Never store raw password after login
+            };
 
-            setUserData(userData);
+            setUserData(loadedUser);
             setIsLoggedIn(true);
+            localStorage.setItem('loggedInUser', JSON.stringify(loadedUser));
             navigate('/');
 
         } catch (error: any) {
-            let errorMessage = 'Login failed';
-
-            switch (error.code) {
-                case 'auth/user-not-found':
-                    errorMessage = 'No account found with this email. Please register first.';
-                    break;
-                case 'auth/wrong-password':
-                    errorMessage = 'Incorrect password. Please try again.';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'Please enter a valid email address.';
-                    break;
-                case 'auth/too-many-requests':
-                    errorMessage = 'Too many failed attempts. Please try again later.';
-                    break;
-                default:
-                    errorMessage = error.message;
-            }
-
-            alert(errorMessage);
+            let message = 'Login failed';
+            if (error.code === 'auth/user-not-found') message = 'User not found';
+            if (error.code === 'auth/wrong-password') message = 'Incorrect password';
+            alert(message);
         } finally {
             setLoading(false);
         }
@@ -162,42 +132,29 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
 
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
+            const firebaseUser = result.user;
 
-            // Initialize or get user data from local storage
-            const userData = initializeUserInLocalStorage(user, {
-                username: user.displayName || user.email?.split('@')[0] || 'User',
-                email: user.email || '',
-                profileImage: user.photoURL || '/default-pfp.png'
-            });
+            const googleUser: UserData = {
+                username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                email: firebaseUser.email || '',
+                password: ''
+            };
 
-            setUserData(userData);
+            saveToLocalStorage(googleUser);
+            setUserData(googleUser);
             setIsLoggedIn(true);
             navigate('/');
 
         } catch (error: any) {
-            let errorMessage = 'Google sign-in failed';
-
-            switch (error.code) {
-                case 'auth/popup-closed-by-user':
-                    errorMessage = 'Sign-in cancelled. Please try again.';
-                    break;
-                case 'auth/popup-blocked':
-                    errorMessage = 'Popup was blocked. Please allow popups and try again.';
-                    break;
-                default:
-                    errorMessage = error.message;
-            }
-
-            alert(errorMessage);
+            alert('Google sign-in failed: ' + error.message);
         } finally {
             setLoading(false);
         }
     };
 
+    const toggleShowPassword = () => setShowPassword(prev => !prev);
     const registerLink = () => setAction(' active');
     const loginLink = () => setAction('');
-    const toggleShowPassword = () => setShowPassword(prev => !prev);
 
     return (
         <div className={`container${action}`}>
@@ -227,11 +184,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
                             disabled={loading}
                         />
                         <button type="button" onClick={toggleShowPassword} disabled={loading}>
-                            <FontAwesomeIcon
-                                className='icon'
-                                icon={showPassword ? faEyeSlash : faEye}
-                                id='eye'
-                            />
+                            <FontAwesomeIcon className='icon' icon={showPassword ? faEyeSlash : faEye} id='eye' />
                         </button>
                         <FontAwesomeIcon className='icon' icon={faLock} />
                     </div>
@@ -245,7 +198,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
                     </div>
 
                     <button className='submit' type='submit' disabled={loading}>
-                        {loading ? 'Signing in...' : 'Login'}
+                        {loading ? 'Logging in...' : 'Login'}
                     </button>
 
                     <div className='google-signin'>
@@ -279,7 +232,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
                             required
                             disabled={loading}
                         />
-                        <FontAwesomeIcon className='icon' icon={faEnvelope} />
+                        <FontAwesomeIcon className='icon' icon={faUser} />
                     </div>
 
                     <div className='inputBox'>
@@ -304,11 +257,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
                             disabled={loading}
                         />
                         <button type="button" onClick={toggleShowPassword} disabled={loading}>
-                            <FontAwesomeIcon
-                                className='icon'
-                                icon={showPassword ? faEyeSlash : faEye}
-                                id='eye'
-                            />
+                            <FontAwesomeIcon className='icon' icon={showPassword ? faEyeSlash : faEye} id='eye' />
                         </button>
                         <FontAwesomeIcon className='icon' icon={faLock} />
                     </div>
