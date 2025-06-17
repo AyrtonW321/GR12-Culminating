@@ -8,6 +8,7 @@ import "./mainPage.css";
 const MainPage = () => {
     const [isOpening, setIsOpening] = useState<boolean>(false);
     const [user, setUser] = useState<User | null>(null);
+    const [openedCards, setOpenedCards] = useState<any[]>([]);
 
     useEffect(() => {
         const stored = localStorage.getItem("loggedInUser");
@@ -22,29 +23,28 @@ const MainPage = () => {
         setIsOpening(true);
 
         setTimeout(() => {
-            // Step 1: Open the pack and update user's collection
-            user.openBoosterPack();
+            // open booster pack
+            let openedCards = user.openBoosterPack();
+            setOpenedCards(openedCards);
 
-            // Step 2: Get all users from localStorage
-            const allUsersRaw = localStorage.getItem("users");
-            if (allUsersRaw) {
-                const allUsers = JSON.parse(allUsersRaw);
+            // saves updated uer to currently logged in user
+            localStorage.setItem("loggedInUser", JSON.stringify(user.toJSON()));
 
-                // Step 3: Manually find and replace the matching user
-                for (let i = 0; i < allUsers.length; i++) {
-                    if (allUsers[i]._email === user.email) {
-                        allUsers[i] = user;
-                        break;
-                    }
-                }
+            // update the actual users database object
+            const usersRaw = localStorage.getItem("users");
+            if (usersRaw) {
+                const users = JSON.parse(usersRaw);
 
-                // Step 4: Save updated list back
-                localStorage.setItem("users", JSON.stringify(allUsers));
+                // replace the user by finding the username as the key
+                users[user.username] = user.toJSON();
+
+                // save the updated users object
+                localStorage.setItem("users", JSON.stringify(users));
             }
 
-            // Step 5: Update session user
-            localStorage.setItem("loggedInUser", JSON.stringify(user));
-            setUser(User.fromJSON(JSON.parse(JSON.stringify(user))));
+            // refresh the users state on the app
+            setUser(User.fromJSON(JSON.parse(JSON.stringify(user.toJSON()))));
+
             setIsOpening(false);
         }, 2000);
     };
@@ -72,12 +72,28 @@ const MainPage = () => {
             {isOpening && (
                 <div className="pack-opening-animation">
                     <div className="cards-flipping">
-                        {[...Array(5)].map((_, index) => (
+                        {openedCards.map((card, index) => (
                             <div
                                 key={index}
-                                className="card"
+                                className={`card ${isOpening ? "flip" : ""}`}
                                 style={{ animationDelay: `${index * 0.1}s` }}
-                            ></div>
+                            >
+                                <div className="card-inner">
+                                    <div
+                                        className="card-front"
+                                        style={{
+                                            backgroundImage: `url("/cardBack.png")`
+                                        }}
+                                    ></div>
+                                    <div
+                                        className="card-back"
+                                        style={{
+                                            backgroundImage: `url(${card.pokemonPhoto})`,
+                                        }}
+                                        title={card.pokemonName || ""}
+                                    ></div>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>

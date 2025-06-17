@@ -1,9 +1,10 @@
 .collection-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 16px;
     padding: 20px;
+    margin-top: 25px;
 }
 
 .card-slot {
@@ -27,4 +28,36 @@
     background-color: #eee;
     padding: 4px 10px;
     border-radius: 12px;
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: nowrap;       
+    gap: 12px;
+    padding: 12px 20px;
+    background: white;     
+    border-bottom: 1px solid #ccc;
+    margin-top: 60px;        
+    justify-content: center;
+    align-items: center;     
+    overflow-x: auto;       
+}
+
+.filter-bar input[type="text"],
+.filter-bar select {
+    padding: 6px 10px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    min-width: 140px;
+    flex-shrink: 0;          
+}
+
+.filter-bar input[type="number"] {
+    padding: 6px 8px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    width: 80px;
+    flex-shrink: 0;
 }
