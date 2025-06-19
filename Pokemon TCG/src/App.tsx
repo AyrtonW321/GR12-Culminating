@@ -13,7 +13,7 @@ import Store from './components/pages/store';
 import Settings from './components/feature/settings';
 import Login from './components/feature/Login';
 import Account from './components/feature/Account';
-import { UserProvider } from './components/feature/usercontext';
+// import { UserProvider } from './components/feature/usercontext';
 
 interface UserData {
   username: string;
@@ -30,7 +30,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<UserData>({ username: '', email: '', password: '' });
-  const [hourglassCount, setHourglassCount] = useState<number>(0);
+  const [hourglassCount, setHourglassCount] = useState<number>(12);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Initialize user data in local storage
@@ -140,7 +140,6 @@ function App() {
 
   return (
     <Router>
-      <UserProvider>
         {!isLoggedIn ? (
           <Routes>
             <Route
@@ -173,8 +172,8 @@ function App() {
                 path="/"
                 element={
                   <MainPage
-                    isLoggedIn={isLoggedIn}
-                    userData={userData}
+                    // isLoggedIn={isLoggedIn}
+                    // userData={userData}
                   />
                 }
               />
@@ -182,7 +181,7 @@ function App() {
                 path="/collection"
                 element={
                   <Collection
-                    isLoggedIn={isLoggedIn}
+                    // isLoggedIn={isLoggedIn}
                     // userData={userData}
                   />
                 }
@@ -224,7 +223,6 @@ function App() {
             </Routes>
           </>
         )}
-      </UserProvider>
     </Router>
   );
 }

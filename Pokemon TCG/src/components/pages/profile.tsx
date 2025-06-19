@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { UserStats } from '../assets/UserStatsClass';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../assets/firebaseConfig';
 import './profile.css';
 
 interface ProfileProps {
@@ -17,41 +15,35 @@ const Profile: React.FC<ProfileProps> = ({ userData }) => {
   const [userStats, setUserStats] = useState<UserStats>(new UserStats());
   const [collectedCards, setCollectedCards] = useState<number>(0);
   const [profileImage, setProfileImage] = useState<string>('/default-pfp.png');
-  const [email, setEmail] = useState<string>('');
+  const [email, setEmail] = useState<string>(userData.email);
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      if (!userData) return;
+    if (!userData) return;
 
-      const storedDisplayName = localStorage.getItem(`displayName_${userData.username}`) || userData.username;
-      const storedProfileImage = localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png';
+    const storedDisplayName = localStorage.getItem(`displayName_${userData.username}`) || userData.username;
+    const storedProfileImage = localStorage.getItem(`profileImage_${userData.username}`) || '/default-pfp.png';
+    const storedStats = localStorage.getItem(`userStats_${userData.username}`);
+    const storedCards = localStorage.getItem(`collectedCards_${userData.username}`);
 
-      setDisplayName(storedDisplayName);
-      setProfileImage(storedProfileImage);
+    setDisplayName(storedDisplayName);
+    setProfileImage(storedProfileImage);
+    setEmail(userData.email); // Can also use localStorage if you stored updates
 
+    if (storedStats) {
       try {
-        const userRef = doc(db, 'users', userData.username);
-        const userDoc = await getDoc(userRef);
-        if (!userDoc.exists()) return;
-
-        const data = userDoc.data();
-        setEmail(data.email || '');
-
-        if (data.stats) {
-          const { wins, losses, currentStreak } = data.stats;
-          setUserStats(new UserStats(wins || 0, losses || 0, currentStreak || 0));
-        }
-
-        if (data.cards && Array.isArray(data.cards)) {
-          const total = data.cards.reduce((sum: number, entry: any) => sum + (entry.count || 0), 0);
-          setCollectedCards(total);
-        }
+        const parsedStats = JSON.parse(storedStats);
+        setUserStats(new UserStats(parsedStats.wins || 0, parsedStats.losses || 0, parsedStats.currentStreak || 0));
       } catch (error) {
-        console.error('Error loading profile data:', error);
+        console.error('Failed to parse user stats:', error);
       }
-    };
+    }
 
-    loadUserProfile();
+    if (storedCards) {
+      const cardCount = parseInt(storedCards);
+      if (!isNaN(cardCount)) {
+        setCollectedCards(cardCount);
+      }
+    }
   }, [userData]);
 
   return (
