@@ -8,6 +8,8 @@ import {
 } from "./AttacksClass.js";
 import { PokedexInfo } from "./PokedexInfo.js";
 
+// comments are written for the first class of each pokemon
+
 export class CharmanderCard extends PokemonCard {
     constructor() {
         const pokedexInfo = new PokedexInfo(4, 0.6, 8.5);
@@ -31,9 +33,20 @@ export class CharmanderCard extends PokemonCard {
         );
     }
 
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     static fromJSON(json: any): CharmanderCard {
         return new CharmanderCard();
     }
+
+    // notice how there is no toJson, as since all the pokemon cards are the same, the count is stored in the user's collection, and we recreate the cards based on that
+    // there is no need to individually parse each pokemon to json
 }
 
 export class CharmeleonCard extends PokemonCard {

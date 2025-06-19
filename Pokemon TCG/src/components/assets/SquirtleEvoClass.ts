@@ -2,6 +2,7 @@ import { PokedexInfo } from "./PokedexInfo.js";
 import { WaterGun, WaveSplash, HydroPump, Surf, HydroBazooka } from "./AttacksClass.js";
 import { PokemonCard } from "./PokemonCardsClass.js";
 
+// class for squirtle
 export class SquirtleCard extends PokemonCard {
     constructor() {
         const pokedexInfo = new PokedexInfo(7, 0.5, 9.0);
@@ -26,6 +27,7 @@ export class SquirtleCard extends PokemonCard {
     }
 }
 
+// class for wartortle
 export class WartortleCard extends PokemonCard {
     constructor() {
         const pokedexInfo = new PokedexInfo(8, 1.0, 22.5);
@@ -50,6 +52,7 @@ export class WartortleCard extends PokemonCard {
     }
 }
 
+// class for blastoise
 export class BlastoiseCard extends PokemonCard {
     constructor() {
         const pokedexInfo = new PokedexInfo(9, 1.6, 85.5);
@@ -74,6 +77,7 @@ export class BlastoiseCard extends PokemonCard {
     }
 }
 
+// class for blastoise EX
 export class BlastoiseEXCard extends PokemonCard {
     constructor() {
         const pokedexInfo = new PokedexInfo(9, 1.6, 85.5); // Same as regular Blastoise

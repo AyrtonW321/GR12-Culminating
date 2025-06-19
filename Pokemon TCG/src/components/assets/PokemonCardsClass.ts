@@ -2,7 +2,9 @@ import { Ability } from "./AbilityClass.js";
 import { Attack } from "./AttacksClass.js";
 import { PokedexInfo } from "./PokedexInfo.js";
 
+// class to store the pokemon card
 export class PokemonCard {
+    // properties
     private _evolutionStage: number;
     private _evolvesFrom: string;
     private _pokemonName: string;
@@ -10,7 +12,9 @@ export class PokemonCard {
     private _type: string;
     private _HP: number;
     private _pokemonPhoto: string;
+    // stores attacks as a array of the attack
     private _attacks: Attack[];
+    // some cards dont have abilities, so this property is optional
     private _abilities?: Ability;
     private _weakness: string;
     private _retreatCost: number;
@@ -18,6 +22,7 @@ export class PokemonCard {
     private _description: string;
     private _pokedexInfo: PokedexInfo;
 
+    // battle specific properties
     private _currentHP: number;
     private _boostedStats: { stat: string; amount: number };
     private _activeStatus: {
@@ -31,6 +36,7 @@ export class PokemonCard {
     private _isDiscarded: boolean;
     private _inBench: boolean;
 
+    // constructor
     constructor(
         evolutionStage: number,
         evolvesFrom: string,
@@ -91,6 +97,7 @@ export class PokemonCard {
         this._inBench = inBench;
     }
 
+    // getters & setters
     public get evolutionStage(): number {
         return this._evolutionStage;
     }
@@ -166,40 +173,71 @@ export class PokemonCard {
         return this._inBench;
     }
 
+    /**
+     * checks if the required energy is attached on a pokemon prior to initating its attack
+     * @param requiredTypes required type of energy
+     * @param requiredAmounts required amounts of each type of energy
+     * @returns returns true if you can attack, false otherwise
+     */
     public checkEnergyRequirements(
         requiredTypes: [string, string],
         requiredAmounts: [number, number]
     ): boolean {
+        // constants for the types
         const [type1, type2] = requiredTypes;
         const [amt1, amt2] = requiredAmounts;
 
         const index1 = this._attachedEnergyType.indexOf(type1);
         const index2 = this._attachedEnergyType.indexOf(type2);
 
+        // true/ false stores for checking the required types
         const hasType1 =
             index1 !== -1 && this._attachedEnergyAmount[index1] >= amt1;
         const hasType2 =
             index2 !== -1 && this._attachedEnergyAmount[index2] >= amt2;
 
+        // returns true if has required types & numbers
         return hasType1 && hasType2;
     }
 
+    /**
+     * get the count of attached energy
+     * @param type type of energy user is looking for 
+     * @returns returns the nunmber of energy
+     */
     public getAttachedEnergyAmount(type: string): number {
         const index = this._attachedEnergyType.indexOf(type);
         if (index === -1) return 0;
         return this._attachedEnergyAmount[index];
     }
+    
+    /**
+     * apply the damage done to this pokemon
+     * @param amount amount of energy done
+     */
     public applyDamage(amount: number): void {
+        // hp cannot go below 0
         this._currentHP = Math.max(0, this._currentHP - amount);
     }
 
+    /**
+     * heals the current pokemon
+     * @param amount heal amount
+     */
     public heal(amount: number): void {
         this._currentHP = Math.min(this._HP, this._currentHP + amount);
     }
 
+    /**
+     * attaches energy to the current pokemon
+     * @param energyType type of energy
+     * @param amount amount of energy
+     */
     public attachEnergy(energyType: string, amount: number): void {
+        // get index of the energy
         const index = this._attachedEnergyType.indexOf(energyType);
 
+        // if has energy, add 1 to amt, else, add the energy
         if (index >= 0) {
             this._attachedEnergyAmount[index] += amount;
         } else {
@@ -208,6 +246,11 @@ export class PokemonCard {
         }
     }
 
+    /**
+     * discards the energy attached
+     * @param energyType type of energy to discard
+     * @param amount amount to discard
+     */
     public discardEnergy(energyType: string, amount: number): void {
         const index = this._attachedEnergyType.indexOf(energyType);
         if (index !== -1) {
@@ -218,25 +261,35 @@ export class PokemonCard {
         }
     }
 
+    /**
+     * retreats the pokemon
+     * @returns returns true if retreats, false otherwise
+     */
     public retreat(): boolean {
+        // checks retreat cost of pokemon
         const retreatCost = this._retreatCost;
+        // if retreat cost is 0, goes straight to bench
         if (retreatCost === 0) {
             this._isActive = false;
             this._inBench = true;
             return true;
         }
 
+        // get total energy
         const totalEnergy = this._attachedEnergyAmount.reduce(
             (sum, amt) => sum + amt,
             0
         );
+        // check if enough energy to retreat
         if (totalEnergy < retreatCost) {
             // Not enough energy to retreat
             return false;
         }
 
+        // energy to remove due to retreat
         let energyToRemove = retreatCost;
 
+        // while the energy to remove greater than 0
         while (energyToRemove > 0) {
             // Find index of energy type with the largest amount
             let maxIndex = 0;
@@ -273,14 +326,21 @@ export class PokemonCard {
         "CONFUSED",
     ]);
 
+    /**
+     * apply the status condition to the pokemon
+     * @param condition the condition to apply
+     */
     public applyStatusCondition(condition: string): void {
+        // sets the condition to uppercase
         condition = condition.toUpperCase();
 
+        // if codition applied is none, then clear all status conditions
         if (condition === "NONE") {
             this.clearStatusCondition();
             return;
         }
 
+        // if condition is poison, add 1 to poison count and add the poisoned status
         if (condition === "POISONED") {
             // Stack poison: increment poisonCount
             this._activeStatus.poisonCount++;
@@ -288,6 +348,7 @@ export class PokemonCard {
             return;
         }
 
+        // if condition is burned, add 1 to burn count and add the burned status
         if (condition === "BURNED") {
             // Stack burn damage count
             this._activeStatus.burnCount++;
@@ -295,6 +356,7 @@ export class PokemonCard {
             return;
         }
 
+        // if the pokemon's non stackable statuses has the condition, just add the status
         if (PokemonCard.nonStackableStatuses.has(condition)) {
             // Remove any non-stackable status currently active before adding new one
             // change a set to an array
@@ -312,7 +374,13 @@ export class PokemonCard {
         this._activeStatus.statuses.add(condition);
     }
 
+    /**
+     * clears the status condition given, or all, if none is given
+     * @param condition condition to clear
+     * @returns returns true if the condition is removed, false otherwise
+     */
     public clearStatusCondition(condition?: string): boolean {
+        // clear all statuses as defualt
         if (!condition || condition.toUpperCase() === "NONE") {
             // Clear all statuses
             if (this._activeStatus.statuses.size > 0) {
@@ -326,6 +394,7 @@ export class PokemonCard {
 
         condition = condition.toUpperCase();
 
+        // removes 1 poison count, or removes it entirely if removed last one
         if (condition === "POISONED") {
             if (this._activeStatus.poisonCount > 0) {
                 this._activeStatus.poisonCount--;
@@ -337,6 +406,7 @@ export class PokemonCard {
             return false;
         }
 
+        // removes 1 burn count, or removes it entirely if removed last one
         if (condition === "BURNED") {
             if (this._activeStatus.burnCount > 0) {
                 this._activeStatus.burnCount--;
@@ -348,6 +418,7 @@ export class PokemonCard {
             return false;
         }
 
+        
         if (this._activeStatus.statuses.has(condition)) {
             this._activeStatus.statuses.delete(condition);
             return true;
@@ -356,6 +427,7 @@ export class PokemonCard {
         return false;
     }
 
+    // getters 
     public getActiveStatuses(): string[] {
         return Array.from(this._activeStatus.statuses);
     }
@@ -368,7 +440,14 @@ export class PokemonCard {
         return this._activeStatus.burnCount;
     }
 
+    /**
+     * serializes a array class into json string format
+     * used to store or transfer the data
+     * 
+     * @returns returns a plain JS object representing the current state of the class with its properties
+     */
     public toJSON() {
+        // note some of these defualts to null otherwise, typescript is type specific so this is needed
         return {
             _evolutionStage: this._evolutionStage,
             _evolvesFrom: this._evolvesFrom,
@@ -399,6 +478,15 @@ export class PokemonCard {
             _inBench: this._inBench,
         };
     }
+
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     static fromJSON(json: any): PokemonCard {
         return new PokemonCard(
             json._evolutionStage,

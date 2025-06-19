@@ -1,15 +1,19 @@
 import { PokemonCard } from "./PokemonCardsClass.js";
 
+// class for all the attacks the pokemons can use
 export abstract class Attack {
+    // properties of the attack
     private _name: string;
     private _description?: string;
     private _damage: number;
     private _damageAddOn: number;
+    // some ability requires 2 types of energies, each with different counts, stores that
     private _energyType: [string, string];
     private _energyCost: [number, number];
     private _coinflipCount: number;
     private _coinflipMulti: string;
 
+    // constructor
     constructor(
         name: string,
         description: string | undefined,
@@ -30,6 +34,7 @@ export abstract class Attack {
         this._coinflipMulti = coinflipMulti;
     }
 
+    // getters & setters
     get Name(): string {
         return this._name;
     }
@@ -62,14 +67,28 @@ export abstract class Attack {
         return this._coinflipMulti;
     }
 
+    /**
+     * Flips a coin,
+     *
+     * @returns returns true of heads, false if tails
+     */
     public flipCoin(): boolean {
         return Math.random() < 0.5;
     }
 
+    /**
+     * apply the weakness bonus (+20 damage) if the defending pokemon type is weak to the attackers
+     *
+     * @param defender Takes a Pokemon, specifically, will take its typing
+     * @param baseDamage takes the base damage of the attack
+     * @returns returns the newly calculated damage, base + 20 if weak, base otherwise
+     */
     public applyWeaknessBonus(
         defender: PokemonCard,
         baseDamage: number
     ): number {
+        // weakness chart, read from left to right, fire is string against grass, ice etc.
+        // has pairings for each pokemon type in the TCG game
         const weaknessChart: Record<string, string[]> = {
             normal: [],
             fire: ["grass", "ice", "bug", "steel"],
@@ -91,14 +110,20 @@ export abstract class Attack {
             fairy: ["fighting", "dragon", "dark"],
         };
 
+        // get the attackers attack type
         const attackerTypes = this.EnergyType.map((type) => type.toLowerCase());
+        // get the defenders type
         const defenderType = defender.type.toLowerCase();
 
+        // loop through the attack energy type, if any energy is strong to the defending pokemon, apply the +20 damage
         for (let i = 0; i < attackerTypes.length; i++) {
+            // get the attack type, both types if applicable
             const attackerType = attackerTypes[i];
+            // get the weakness chart according to the attackers energy type
             const weaknesses = weaknessChart[attackerType];
 
             if (weaknesses) {
+                // loop through the weakness type and if defender type matches, adds 20 damage to base damage
                 for (let j = 0; j < weaknesses.length; j++) {
                     if (weaknesses[j] === defenderType) {
                         return baseDamage + 20;
@@ -107,14 +132,27 @@ export abstract class Attack {
             }
         }
 
+        // if finds nothing, returns base damage
         return baseDamage;
     }
 
+    /**
+     * Specific attack otf the pokemon
+     *
+     * @param defender defending pokemon
+     * @param attacker attacking pokemon
+     */
     public abstract attackAction(
         defender: PokemonCard,
         attacker: PokemonCard
     ): boolean;
 
+    /**
+     * serializes a array class into json string format
+     * used to store or transfer the data
+     *
+     * @returns returns a plain JS object representing the current state of the class with its properties
+     */
     public toJSON() {
         return {
             type: this.constructor.name,
@@ -129,7 +167,16 @@ export abstract class Attack {
         };
     }
 
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     static fromJSON(json: any): Attack {
+        // creates a new attack, since all the attacks are the same, it reduces the need to individually match each property
         switch (json.type) {
             case "Ember":
                 return new Ember();
@@ -159,6 +206,7 @@ export abstract class Attack {
                 return new Surf();
             case "WaveSplash":
                 return new WaveSplash();
+            // defualt return, shouldn't ever be reached
             default:
                 return new (class extends Attack {
                     attackAction(): boolean {
@@ -179,6 +227,9 @@ export abstract class Attack {
     }
 }
 
+// each attack's unique class
+// constructor creates the attack which has each attacks unique attribuites
+// attackAction has the unique actions each attack does
 export class Ember extends Attack {
     constructor() {
         super(
@@ -194,7 +245,9 @@ export class Ember extends Attack {
     }
 
     public attackAction(defender: PokemonCard, attacker: PokemonCard): boolean {
-        if (!attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)) {
+        if (
+            !attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)
+        ) {
             console.log("Not enough energy to perform Ember");
             return false;
         }
@@ -206,7 +259,9 @@ export class Ember extends Attack {
         // Discard 1 fire energy from attacker
         attacker.discardEnergy("fire", 1);
 
-        console.log(`Ember deals ${totalDamage} damage to ${defender.pokemonName} and discards 1 Fire energy from attacker`);
+        console.log(
+            `Ember deals ${totalDamage} damage to ${defender.pokemonName} and discards 1 Fire energy from attacker`
+        );
         return true;
     }
 }
@@ -226,7 +281,9 @@ export class FireClaws extends Attack {
     }
 
     public attackAction(defender: PokemonCard, attacker: PokemonCard): boolean {
-        if (!attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)) {
+        if (
+            !attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)
+        ) {
             console.log("Not enough energy to perform Fire Claws");
             return false;
         }
@@ -234,7 +291,9 @@ export class FireClaws extends Attack {
         let totalDamage = this.applyWeaknessBonus(defender, this.Damage);
         defender.applyDamage(totalDamage);
 
-        console.log(`Fire Claws deals ${totalDamage} damage to ${defender.pokemonName}`);
+        console.log(
+            `Fire Claws deals ${totalDamage} damage to ${defender.pokemonName}`
+        );
         return true;
     }
 }
@@ -254,7 +313,9 @@ export class FireSpin extends Attack {
     }
 
     public attackAction(defender: PokemonCard, attacker: PokemonCard): boolean {
-        if (!attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)) {
+        if (
+            !attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)
+        ) {
             console.log("Not enough energy to perform Fire Spin");
             return false;
         }
@@ -265,27 +326,22 @@ export class FireSpin extends Attack {
         // Discard 2 fire energy
         attacker.discardEnergy("fire", 2);
 
-        console.log(`Fire Spin deals ${totalDamage} damage to ${defender.pokemonName} and discards 2 Fire energy from attacker`);
+        console.log(
+            `Fire Spin deals ${totalDamage} damage to ${defender.pokemonName} and discards 2 Fire energy from attacker`
+        );
         return true;
     }
 }
 
 export class Slash extends Attack {
     constructor() {
-        super(
-            "Slash",
-            undefined,
-            60,
-            0,
-            ["fire", "normal"],
-            [1, 2],
-            0,
-            ""
-        );
+        super("Slash", undefined, 60, 0, ["fire", "normal"], [1, 2], 0, "");
     }
 
     public attackAction(defender: PokemonCard, attacker: PokemonCard): boolean {
-        if (!attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)) {
+        if (
+            !attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)
+        ) {
             console.log("Not enough energy to perform Slash");
             return false;
         }
@@ -293,7 +349,9 @@ export class Slash extends Attack {
         let totalDamage = this.applyWeaknessBonus(defender, this.Damage);
         defender.applyDamage(totalDamage);
 
-        console.log(`Slash deals ${totalDamage} damage to ${defender.pokemonName}`);
+        console.log(
+            `Slash deals ${totalDamage} damage to ${defender.pokemonName}`
+        );
         return true;
     }
 }
@@ -313,7 +371,9 @@ export class CrimsonStorm extends Attack {
     }
 
     public attackAction(defender: PokemonCard, attacker: PokemonCard): boolean {
-        if (!attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)) {
+        if (
+            !attacker.checkEnergyRequirements(this.EnergyType, this.EnergyCost)
+        ) {
             console.log("Not enough energy to perform Crimson Storm");
             return false;
         }
@@ -324,7 +384,9 @@ export class CrimsonStorm extends Attack {
         // Discard 2 fire energy
         attacker.discardEnergy("fire", 2);
 
-        console.log(`Crimson Storm deals ${totalDamage} damage to ${defender.pokemonName} and discards 2 Fire energy from attacker`);
+        console.log(
+            `Crimson Storm deals ${totalDamage} damage to ${defender.pokemonName} and discards 2 Fire energy from attacker`
+        );
         return true;
     }
 }
