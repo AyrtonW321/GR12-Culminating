@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faHourglass } from '@fortawesome/free-solid-svg-icons';
+import { User } from "../assets/UserClass.js";
 import './store.css';
 
 interface StoreProps {
@@ -8,36 +9,86 @@ interface StoreProps {
 }
 
 const Store = ({ onHourglassUpdate }: StoreProps) => {
-  const [coins, setCoins] = useState<number>(1000); // Default starting coins
-  const [hourglasses, setHourglasses] = useState<number>(3); // Default starting hourglasses
+  const [coins, setCoins] = useState<number>(1000);
+  const [hourglasses, setHourglasses] = useState<number>(12);
   const [quantity, setQuantity] = useState<number>(1);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  const COINS_PER_HOURGLASS = 50; // Cost of one hourglass
-  const MAX_PURCHASE = 20; // Maximum hourglasses that can be bought at once
+  const COINS_PER_HOURGLASS = 50;
+  const MAX_PURCHASE = 20;
 
-  // Load user data from localStorage
+  // Update the useEffect hook
   useEffect(() => {
-    const savedCoins = localStorage.getItem('userCoins');
-    const savedHourglasses = localStorage.getItem('userHourglasses');
-    
-    if (savedCoins) {
-      setCoins(parseInt(savedCoins));
-    }
-    if (savedHourglasses) {
-      setHourglasses(parseInt(savedHourglasses));
-    }
+      // Load user from localStorage and sync hourglasses
+      const stored = localStorage.getItem("loggedInUser");
+      if (stored) {
+          const loadedUser = User.fromJSON(JSON.parse(stored));
+          loadedUser.syncHourglassesWithLocalStorage();
+          setUser(loadedUser);
+          setHourglasses(loadedUser.getCurrentHourglasses());
+
+          // Load coins with username
+          const savedCoins = localStorage.getItem(`userCoins_${loadedUser.username}`);
+          if (savedCoins) {
+              setCoins(parseInt(savedCoins));
+          } else {
+              // Initialize with default value
+              localStorage.setItem(`userCoins_${loadedUser.username}`, '1000');
+              setCoins(1000);
+          }
+      } else {
+          // Fallback behavior if no user data
+          const savedCoins = localStorage.getItem('userCoins');
+          if (savedCoins) {
+              setCoins(parseInt(savedCoins));
+          }
+          
+          const savedHourglasses = localStorage.getItem('userHourglasses');
+          if (savedHourglasses) {
+              setHourglasses(parseInt(savedHourglasses));
+          } else {
+              localStorage.setItem('userHourglasses', '12');
+          }
+      }
   }, []);
 
-  // Save user data to localStorage
+  // Save user data to localStorage and update User class
   const saveUserData = (newCoins: number, newHourglasses: number) => {
-    localStorage.setItem('userCoins', newCoins.toString());
-    localStorage.setItem('userHourglasses', newHourglasses.toString());
-    
-    // Notify parent component of hourglass update
-    if (onHourglassUpdate) {
-      onHourglassUpdate(newHourglasses);
-    }
+      if (user) {
+          // Store coins with username
+          localStorage.setItem(`userCoins_${user.username}`, newCoins.toString());
+
+          // Update user class hourglasses (this also updates localStorage with username)
+          const currentHourglasses = user.getCurrentHourglasses();
+          const difference = newHourglasses - currentHourglasses;
+
+          if (difference > 0) {
+              user.addHourglass(difference);
+          } else if (difference < 0) {
+              user.subtractHourglass(Math.abs(difference));
+          }
+
+          // Save updated user to localStorage
+          localStorage.setItem("loggedInUser", JSON.stringify(user.toJSON()));
+
+          // Update the actual users database object
+          const usersRaw = localStorage.getItem("users");
+          if (usersRaw) {
+              const users = JSON.parse(usersRaw);
+              users[user.username] = user.toJSON();
+              localStorage.setItem("users", JSON.stringify(users));
+          }
+      } else {
+          // Fallback if no user class
+          localStorage.setItem('userCoins', newCoins.toString());
+          localStorage.setItem('userHourglasses', newHourglasses.toString());
+      }
+
+      // Notify parent component of hourglass update
+      if (onHourglassUpdate) {
+          onHourglassUpdate(newHourglasses);
+      }
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,23 +104,30 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
   };
 
   const handlePurchase = () => {
-    const totalCost = getTotalCost();
-    
-    if (canAffordPurchase()) {
-      const newCoins = coins - totalCost;
-      const newHourglasses = hourglasses + quantity;
-      
-      setCoins(newCoins);
-      setHourglasses(newHourglasses);
-      saveUserData(newCoins, newHourglasses);
-      
-      // Show success message
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      
-      // Reset quantity to 1
-      setQuantity(1);
-    }
+      const totalCost = getTotalCost();
+
+      if (canAffordPurchase()) {
+          const newCoins = coins - totalCost;
+          const newHourglasses = hourglasses + quantity;
+
+          setCoins(newCoins);
+          setHourglasses(newHourglasses);
+          saveUserData(newCoins, newHourglasses);
+
+          // Mark store as visited for missions - NOW WITH USERNAME
+          if (user) {
+              localStorage.setItem(`storeVisited_${user.username}`, 'true');
+          } else {
+              localStorage.setItem('storeVisited', 'true'); // fallback
+          }
+
+          // Show success message
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+
+          // Reset quantity to 1
+          setQuantity(1);
+      }
   };
 
   const getMaxAffordable = () => {
@@ -95,7 +153,7 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
 
         <div className="purchase-section">
           <h2 className="purchase-title">Buy Hourglasses</h2>
-          
+
           <div className="hourglass-display">
             <div className="hourglass-icon">
               <FontAwesomeIcon icon={faHourglass} />
@@ -110,7 +168,7 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
           </div>
 
           <div className="quantity-selector">
-            
+
             <div className="slider-container">
               <input
                 type="range"
@@ -138,7 +196,7 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
             onClick={handlePurchase}
             disabled={!canAffordPurchase() || quantity === 0}
           >
-            {canAffordPurchase() 
+            {canAffordPurchase()
               ? `Purchase ${quantity} Hourglass${quantity !== 1 ? 'es' : ''}`
               : 'Insufficient Coins'
             }
@@ -152,7 +210,7 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
 
           {getMaxAffordable() === 0 && (
             <div className="insufficient-funds">
-              You don't have enough coins to buy any hourglasses. 
+              You don't have enough coins to buy any hourglasses.
               Complete missions or battles to earn more coins!
             </div>
           )}

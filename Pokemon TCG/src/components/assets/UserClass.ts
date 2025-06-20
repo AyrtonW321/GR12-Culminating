@@ -176,6 +176,51 @@ export class User {
         return this._hourglasses;
     }
 
+    // Update syncHourglassesWithLocalStorage method
+    public syncHourglassesWithLocalStorage(): void {
+        const storedHourglasses = localStorage.getItem(`userHourglasses_${this._username}`);
+        if (storedHourglasses) {
+            this._hourglasses = parseInt(storedHourglasses);
+        } else {
+            // If no stored value, initialize localStorage with current value
+            localStorage.setItem(`userHourglasses_${this._username}`, this._hourglasses.toString());
+        }
+    }
+
+    // Update addHourglass method
+    public addHourglass(amt: number): number {
+        this._hourglasses += amt;
+        // Update localStorage with username
+        localStorage.setItem(`userHourglasses_${this._username}`, this._hourglasses.toString());
+        return this._hourglasses;
+    }
+
+    // Update subtractHourglass method
+    public subtractHourglass(amt: number): boolean {
+        if (this._hourglasses >= amt) {
+            this._hourglasses -= amt;
+            // Update localStorage with username
+            localStorage.setItem(`userHourglasses_${this._username}`, this._hourglasses.toString());
+            return true;
+        }
+        return false;
+    }
+
+    // Update the existing openPackUsingHourglass method
+    public openPackUsingHourglass(): PokemonCard[] | null {
+        if (this._hourglasses < HOURGLASS_COST) {
+            return null;
+        }
+        this.subtractHourglass(HOURGLASS_COST);
+        return this.openBoosterPack();
+    }
+
+    // Add method to get current hourglasses (always sync first)
+    public getCurrentHourglasses(): number {
+        this.syncHourglassesWithLocalStorage();
+        return this._hourglasses;
+    }
+
     public openBoosterPack(cardsToOpen: number = 5): PokemonCard[] {
         const cardsByRarity: Record<number, PokemonCard[]> = {};
         for (let rarity = 1; rarity <= 8; rarity++) {
@@ -684,19 +729,6 @@ export class User {
         }
 
         return true;
-    }
-
-    public openPackUsingHourglass(): PokemonCard[] | null {
-        if (this._hourglasses < HOURGLASS_COST) {
-            return null;
-        }
-        this._hourglasses -= HOURGLASS_COST;
-        return this.openBoosterPack();
-    }
-
-    public addHourglass(amt: number) {
-        this._hourglasses += amt;
-        return this._hourglasses;
     }
 
     public toJSON() {

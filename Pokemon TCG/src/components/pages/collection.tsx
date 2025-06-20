@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User } from "../assets/UserClass";
+import { User } from "../assets/UserClass.js";
 import './collection.css';
 
 const Collection = () => {
