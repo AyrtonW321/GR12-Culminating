@@ -1,9 +1,9 @@
 // users stats
 export class UserStats {
-    // properties
-    private wins: number;
-    private losses: number;
-    private currentStreak: number;
+    // properties // needs to be public to be accessed by the profile
+    public wins: number;
+    public losses: number;
+    public currentStreak: number;
 
     // constructor
     constructor(

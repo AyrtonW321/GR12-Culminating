@@ -1,4 +1,4 @@
-/* Settings Modal Styles */
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -100,7 +100,7 @@
   background-color: #555;
 }
 
-/* Profile Image Styles for Settings */
+
 .profileImageContainer {
   display: flex;
   flex-direction: column;

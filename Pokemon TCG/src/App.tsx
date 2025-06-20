@@ -1,3 +1,4 @@
+// impor the ncessary libraries and components
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -16,6 +17,7 @@ import Login from './components/feature/Login';
 import Account from './components/feature/Account';
 // import { UserProvider } from './components/feature/usercontext';
 
+// interface for user data
 interface UserData {
   username: string;
   email: string;
@@ -27,6 +29,7 @@ interface UserData {
   collectedCards?: number;
 }
 
+// function for the App component
 function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,6 +43,7 @@ function App() {
     const username = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
     const email = firebaseUser.email || '';
 
+    // user data
     const userData = {
       userId,
       username,
@@ -148,6 +152,7 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  // function to handle sign out
   const handleSignOut = async () => {
     try {
       await auth.signOut();
@@ -209,6 +214,7 @@ function App() {
     }
   };
 
+  // loading page
   if (authLoading) {
     return (
       <div className="app-loading">
@@ -217,6 +223,7 @@ function App() {
     );
   }
 
+  // render and route all the pages and features
   return (
     <Router>
       {!isLoggedIn ? (

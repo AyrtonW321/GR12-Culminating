@@ -1,3 +1,4 @@
+// import the necessary libraries and components
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGift, faClipboardList, faHourglass } from "@fortawesome/free-solid-svg-icons";
@@ -5,12 +6,15 @@ import { User } from "../assets/UserClass.js";
 import Missions from "../feature/missions.js";
 import "./mainpage.css";
 
+// mainpage interface
 interface MainPageProps {
     onCoinsUpdate?: (newAmount: number) => void;
     onHourglassUpdate?: (newAmount: number) => void;
 }
 
+// Mainpage component
 const MainPage = ({ onCoinsUpdate, onHourglassUpdate }: MainPageProps) => {
+    // hooks for the states 
     const [isOpening, setIsOpening] = useState<boolean>(false);
     const [user, setUser] = useState<User | null>(null);
     const [openedCards, setOpenedCards] = useState<any[]>([]);
@@ -18,6 +22,7 @@ const MainPage = ({ onCoinsUpdate, onHourglassUpdate }: MainPageProps) => {
     const [showMissions, setShowMissions] = useState<boolean>(false);
     const [showInsufficientHourglasses, setShowInsufficientHourglasses] = useState<boolean>(false);
 
+    // load user data from the local storage
     useEffect(() => {
         const stored = localStorage.getItem("loggedInUser");
         if (stored) {
@@ -33,6 +38,7 @@ const MainPage = ({ onCoinsUpdate, onHourglassUpdate }: MainPageProps) => {
         }
     }, [onHourglassUpdate]);
 
+    // function to save user data
     const saveUserData = (updatedUser: User) => {
         // Save updated user to currently logged in user
         localStorage.setItem("loggedInUser", JSON.stringify(updatedUser.toJSON()));
@@ -97,10 +103,12 @@ const MainPage = ({ onCoinsUpdate, onHourglassUpdate }: MainPageProps) => {
     };
 
 
+    // function to handle when the mission button is clicked
     const handleMissionsClick = () => {
         setShowMissions(true);
     };
 
+    // update the coins
     const handleMissionCoinsUpdate = (newAmount: number) => {
         if (onCoinsUpdate) {
             onCoinsUpdate(newAmount);
@@ -133,6 +141,7 @@ const MainPage = ({ onCoinsUpdate, onHourglassUpdate }: MainPageProps) => {
         // Update the userHourglasses calculation
     const userHourglasses = user?.getCurrentHourglasses() || 0;
 
+    // render 
     return (
         <div className="main-container">
             <div className="pack-display-container">

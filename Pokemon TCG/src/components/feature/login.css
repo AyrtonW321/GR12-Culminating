@@ -1,4 +1,4 @@
-/* Base styles */
+
 body {
     min-height: 100vh;
     margin: 0;
@@ -26,7 +26,7 @@ body {
     height: 520px;
 }
 
-/* Form box styles */
+
 .container .formBox {
     position: absolute;
     width: 100%;
@@ -50,7 +50,7 @@ body {
     transform: translateX(0);
 }
 
-/* Form header */
+
 form h1 {
     font-size: 32px;
     text-align: center;
@@ -59,7 +59,7 @@ form h1 {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Input box styles */
+
 .inputBox, .inputBox2 {
     position: relative;
     width: 100%;
@@ -89,7 +89,7 @@ form h1 {
     color: #000000;
 }
 
-/* Icons */
+
 .inputBox .icon, .inputBox2 .icon {
     position: absolute;
     left: 15px;
@@ -99,7 +99,7 @@ form h1 {
     color: #000000;
 }
 
-/* Eye icon button */
+
 .inputBox button[type="button"] {
     position: absolute;
     right: 15px;
@@ -112,7 +112,7 @@ form h1 {
     color: #000000;
 }
 
-/* Checkbox and remember me */
+
 .rememberForgot {
     display: flex;
     justify-content: space-between;
@@ -145,7 +145,7 @@ form h1 {
     color: #333333;
 }
 
-/* Submit button */
+
 .submit {
     width: 100%;
     height: 50px;
@@ -165,7 +165,7 @@ form h1 {
     background-color: #b01010;
 }
 
-/* Register link */
+
 .register {
     text-align: center;
     margin-top: 25px;
@@ -185,7 +185,7 @@ form h1 {
     color: #333333;
 }
 
-/* Account Container */
+
 .accountContainer {
     position: relative;
     width: 80%;
@@ -213,7 +213,7 @@ form h1 {
     margin: 15px 0;
 }
 
-/* Account info */
+
 .accountInfo label {
     display: block;
     margin-bottom: 8px;
@@ -227,7 +227,7 @@ form h1 {
     border: 2px solid #333333;
 }
 
-/* Buttons */
+
 .accountContainer button {
     padding: 6px 15px;
     border: none;

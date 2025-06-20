@@ -1,12 +1,14 @@
+// import the necessary libraries and components
 import { useEffect, useState } from "react";
 import { User } from "../assets/UserClass.js";
 import './collection.css';
 
+// Collection component
 const Collection = () => {
     const [user, setUser] = useState<User | null>(null);
     const [cards, setCards] = useState<[any, number][]>([]);
 
-    // Filter states
+    // Hooks for the filters
     const [nameFilter, setNameFilter] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
     const [minRarity, setMinRarity] = useState<number | "">("");
@@ -50,6 +52,7 @@ const Collection = () => {
         setCards(results.map(({ card, count }) => [card, count]));
     }, [nameFilter, typeFilter, minRarity, maxRarity, minHP, maxHP, minCount, sortBy, sortOrder, user]);
 
+    // render
     return (
         <>
             <div className="filter-bar">

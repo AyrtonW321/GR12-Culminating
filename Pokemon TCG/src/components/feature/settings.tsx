@@ -1,8 +1,10 @@
+// import the necessary libraries and components
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../assets/firebaseConfig';
 import { updateProfile } from 'firebase/auth';
 import './settings.css';
+// interface for the user data
 interface UserData {
     username: string;
     email: string;
@@ -14,6 +16,7 @@ interface UserData {
     collectedCards?: number;
 }
 
+// setting interface 
 interface SettingsProps {
     closeModal: () => void;
     isLoggedIn: boolean;
@@ -21,16 +24,20 @@ interface SettingsProps {
     onUserDataUpdate: (userData: UserData) => void;
 }
 
+// interface for the form data 
 interface FormData {
     username: string;
     email: string;
     profileImage: string;
 }
 
+// settings component
 const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: SettingsProps) => {
+    // hooks for the settings
     const navigate = useNavigate();
     const currentUser = auth.currentUser;
 
+    // state for the form data
     const [formData, setFormData] = useState<FormData>({
         username: currentUser?.displayName || userData.username,
         email: currentUser?.email || userData.email,
@@ -38,6 +45,7 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
     });
     const [loading, setLoading] = useState(false);
 
+    // function to handle the input changes
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -46,6 +54,7 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
         }));
     };
 
+    // function to handle the image changes
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
@@ -61,6 +70,7 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
         }
     };
 
+    // function to handle the form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -81,12 +91,14 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
         localStorage.setItem(`displayName_${userData.username}`, formData.username);
         localStorage.setItem(`userEmail_${userData.username}`, formData.email);
 
+        // update the user data
         const updatedUserData = {
             ...userData,
             username: formData.username,
             email: formData.email
         };
 
+        // update the user data 
         const usersRaw = localStorage.getItem('users');
         let users = {};
 
@@ -104,11 +116,14 @@ const Settings = ({ closeModal, isLoggedIn, userData, onUserDataUpdate }: Settin
         closeModal();
     };
 
+    // function to handle the account click
     const handleAccountClick = () => {
         closeModal();
         navigate('/account');
     };
 
+
+    // render
     return (
         <div className="modalOverlay" onClick={closeModal}>
             <div className="modalContent" onClick={(e) => e.stopPropagation()}>

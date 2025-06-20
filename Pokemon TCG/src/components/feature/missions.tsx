@@ -1,9 +1,11 @@
+// import neccessary libraries and components
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGift, faTrophy, faCoins, faCheck, faHourglass } from '@fortawesome/free-solid-svg-icons';
 import { User } from "../assets/UserClass.js";
 import './mission.css';
 
+// interface for mission object
 interface Mission {
   id: number;
   title: string;
@@ -15,13 +17,16 @@ interface Mission {
   completed: boolean;
 }
 
+// interface for props passed into missions component
 interface MissionsProps {
   closeModal: () => void;
   onCoinsUpdate?: (newAmount: number) => void;
   onHourglassUpdate?: (newAmount: number) => void;
 }
 
+// Missions component
 const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProps) => {
+  // State variables for missions, coins, hourglasses, and user
   const [missions, setMissions] = useState<Mission[]>([
     {
       id: 1,
@@ -85,6 +90,7 @@ const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProp
     }
   ]);
 
+  // hook state variables for coins, etc
   const [coins, setCoins] = useState<number>(1000);
   const [hourglasses, setHourglasses] = useState<number>(12);
   const [user, setUser] = useState<User | null>(null);
@@ -211,6 +217,7 @@ const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProp
     }
   };
 
+  // handle mission click to complete and claim rewards
   const handleMissionClick = (missionId: number) => {
     const mission = missions.find(m => m.id === missionId);
     
@@ -254,10 +261,12 @@ const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProp
     }
   };
 
+  // function to calc the prograss
   const getProgressPercentage = (progress: number, maxProgress: number) => {
     return Math.min((progress / maxProgress) * 100, 100);
   };
 
+  // function to get the icon for the missions
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {
       case 'coins':
@@ -271,6 +280,7 @@ const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProp
     }
   };
 
+  // function to get teh text for the missions
   const getRewardText = (rewardType: string, amount: number) => {
     switch (rewardType) {
       case 'coins':
@@ -284,10 +294,12 @@ const Missions = ({ closeModal, onCoinsUpdate, onHourglassUpdate }: MissionsProp
     }
   };
 
+  // function to check if the mission is done
   const canClaimReward = (mission: Mission) => {
     return !mission.completed && mission.progress >= mission.maxProgress;
   };
 
+  // render
   return (
     <div className="missionOverlay" onClick={closeModal}>
       <div className="missionContent" onClick={(e) => e.stopPropagation()}>        

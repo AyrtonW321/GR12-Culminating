@@ -1,7 +1,9 @@
+// import the necessary libraries and components
 import { useEffect, useState } from 'react';
-import { UserStats } from '../assets/UserStatsClass';
+import { UserStats } from '../assets/UserStatsClass.js';
 import './profile.css';
 
+// interface for profil
 interface ProfileProps {
   userData: {
     username: string;
@@ -10,6 +12,7 @@ interface ProfileProps {
   };
 }
 
+// Profile component
 const Profile: React.FC<ProfileProps> = ({ userData }) => {
   const [displayName, setDisplayName] = useState<string>('PokemonTrainer');
   const [userStats, setUserStats] = useState<UserStats>(new UserStats());
@@ -17,6 +20,7 @@ const Profile: React.FC<ProfileProps> = ({ userData }) => {
   const [profileImage, setProfileImage] = useState<string>('/default-pfp.png');
   const [email, setEmail] = useState<string>(userData.email);
 
+  // load the user data from local storage
   useEffect(() => {
     if (!userData) return;
 
@@ -27,7 +31,7 @@ const Profile: React.FC<ProfileProps> = ({ userData }) => {
 
     setDisplayName(storedDisplayName);
     setProfileImage(storedProfileImage);
-    setEmail(userData.email); // Can also use localStorage if you stored updates
+    setEmail(userData.email);
 
     if (storedStats) {
       try {
@@ -46,6 +50,7 @@ const Profile: React.FC<ProfileProps> = ({ userData }) => {
     }
   }, [userData]);
 
+  // render the profile
   return (
     <div className="profile-container">
       <div className="profile-header">

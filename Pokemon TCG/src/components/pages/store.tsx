@@ -1,13 +1,16 @@
+// import the necessary libraries and components
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faHourglass } from '@fortawesome/free-solid-svg-icons';
 import { User } from "../assets/UserClass.js";
 import './store.css';
 
+// interface for store
 interface StoreProps {
   onHourglassUpdate?: (newAmount: number) => void;
 }
 
+// Store component
 const Store = ({ onHourglassUpdate }: StoreProps) => {
   const [coins, setCoins] = useState<number>(1000);
   const [hourglasses, setHourglasses] = useState<number>(12);
@@ -15,6 +18,7 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
 
+  // max constants
   const COINS_PER_HOURGLASS = 50;
   const MAX_PURCHASE = 20;
 
@@ -91,18 +95,22 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
       }
   };
 
+  // handle the quantity change
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuantity(parseInt(e.target.value));
   };
 
+  // function to get the total cost of hourglasses selected
   const getTotalCost = () => {
     return quantity * COINS_PER_HOURGLASS;
   };
 
+  // see if the user can afford
   const canAffordPurchase = () => {
     return coins >= getTotalCost();
   };
 
+  // functionto handle the purchase
   const handlePurchase = () => {
       const totalCost = getTotalCost();
 
@@ -130,10 +138,12 @@ const Store = ({ onHourglassUpdate }: StoreProps) => {
       }
   };
 
+  // function to get the maximum affordable hourglasses
   const getMaxAffordable = () => {
     return Math.min(Math.floor(coins / COINS_PER_HOURGLASS), MAX_PURCHASE);
   };
 
+  // render
   return (
     <div className="store-container">
       <div className="store-main-display">

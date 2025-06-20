@@ -1,14 +1,17 @@
+// import the necessary libraries and components
 import { Link } from 'react-router-dom';
 import './NavBar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear, faHouse, faBurst, faClone, faStore, faUser } from '@fortawesome/free-solid-svg-icons';
 
+// interface for the users data 
 interface UserData {
     username: string;
     email: string;
     password: string;
 }
 
+// interface for the navbar 
 interface NavBarProps {
     onSettingsClick: () => void;
     isLoggedIn: boolean;
@@ -18,13 +21,16 @@ interface NavBarProps {
     hourglassCount: number;
 }
 
+// Navbar component
 const NavBar: React.FC<NavBarProps> = ({
     onSettingsClick,
     hourglassCount
 }) => {
+    // render
     return (
         <header id="header">
             <div className="navContainer">
+                {/* Route to the pages */}
                 <Link to="/" className="logoContainer">
                     <img src="/logo.png" alt="Logo" className="logo" />
                 </Link>

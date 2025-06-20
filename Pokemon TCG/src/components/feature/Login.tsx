@@ -1,3 +1,4 @@
+// import necessary libraries and components
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,6 +15,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../assets/firebaseConfig";
 
+// user data interface
 interface UserData {
     username: string;
     email: string;
@@ -25,13 +27,16 @@ interface UserData {
     collectedCards?: number;
 }
 
+// login interface 
 interface LoginProps {
     setIsLoggedIn: (value: boolean) => void;
     setUserData: (user: UserData) => void;
     initializeUserInLocalStorage: (firebaseUser: any, additionalData?: Partial<UserData>) => UserData;
 }
 
+// Login component
 const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUserInLocalStorage }) => {
+    // hook states for managing form inputs and loading state
     const [action, setAction] = useState('');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -40,8 +45,10 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
+    // Google authentication provider
     const googleProvider = new GoogleAuthProvider();
-
+ 
+    // Function to save user data to local storage
     const saveToLocalStorage = (user: UserData) => {
         localStorage.setItem('loggedInUser', JSON.stringify(user));
         const usersJson = localStorage.getItem('users');
@@ -50,6 +57,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         localStorage.setItem('users', JSON.stringify(users));
     };
 
+    // Function to handle user registration
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -58,6 +66,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         const trimmedEmail = email.trim();
         const trimmedPassword = password.trim();
 
+        // Validate inputs
         if (trimmedUsername.length < 3 || trimmedUsername.length > 15 || trimmedUsername[0] !== trimmedUsername[0].toUpperCase()) {
             alert('Username must be between 3-15 characters and start with a capital letter.');
             setLoading(false);
@@ -70,6 +79,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
             return;
         }
 
+        // Create a new user with Firebase Authentication
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
             await updateProfile(userCredential.user, { displayName: trimmedUsername });
@@ -97,10 +107,12 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         }
     };
 
+    // Function to handle user login
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
+        // Validate inputs
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
             const firebaseUser = userCredential.user;
@@ -126,6 +138,7 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         }
     };
 
+    // Function to handle Google sign-in
     const handleGoogleSignIn = async () => {
         setLoading(true);
 
@@ -151,10 +164,12 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn, setUserData, initializeUse
         }
     };
 
+    // Toggle password visibility
     const toggleShowPassword = () => setShowPassword(prev => !prev);
     const registerLink = () => setAction(' active');
     const loginLink = () => setAction('');
 
+    // Render the login and registration forms
     return (
         <div className={`container${action}`}>
             <div className='formBox login'>
