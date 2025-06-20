@@ -1,7 +1,9 @@
 import { User } from "./UserClass.js";
 import { Deck } from "./DeckClass.js";
 
+// class for holding the game record, storage reasons
 export class GameRecord {
+    // properties
     recordId: string;
     date: Date;
     opponent: User;
@@ -11,6 +13,7 @@ export class GameRecord {
     turns: number;
     gameLog: string[];
 
+    // constructor
     constructor(
         recordId: string,
         date: Date,
@@ -31,6 +34,10 @@ export class GameRecord {
         this.gameLog = gameLog;
     }
 
+    /**
+     * get the match summer, winner, loser, turns etc
+     * @returns returns a string with all the data of the battle
+     */
     public getMatchSummary(): string {
         const winnerName = this.winner.username;
         return (
@@ -42,6 +49,12 @@ export class GameRecord {
         );
     }
 
+    /**
+     * serializes a array class into json string format
+     * used to store or transfer the data
+     * 
+     * @returns returns a plain JS object representing the current state of the class with its properties
+     */
     public toJSON() {
         return {
             recordId: this.recordId,
@@ -55,6 +68,14 @@ export class GameRecord {
         };
     }
 
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     public static fromJSON(json: any): GameRecord {
         return new GameRecord(
             json.recordId,

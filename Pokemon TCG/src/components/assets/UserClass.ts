@@ -22,6 +22,7 @@ import { UserStats } from "./UserStatsClass.js";
 import { GameRecord } from "./GameRecordClass.js";
 import { Attack } from "./AttacksClass.js";
 
+// all the cards currently in the game
 const ALL_CARDS: PokemonCard[] = [
     new CharmanderCard(),
     new CharmeleonCard(),
@@ -37,9 +38,12 @@ const ALL_CARDS: PokemonCard[] = [
     new BlastoiseEXCard(),
 ];
 
+// defualt hourglass cost
 const HOURGLASS_COST = 12;
 
+// class for the user
 export class User {
+    // properties that are user specific, non battle specific properties
     private _username: string;
     private _email: string;
     private _password: string;
@@ -50,6 +54,7 @@ export class User {
     private _winRate: number;
     private _gameHistory: GameRecord[];
 
+    // battle specific properties
     private _activeDeckName: string | null = null;
     private _activeDeck: Deck | null = null;
     private _activeCard: PokemonCard;
@@ -58,8 +63,10 @@ export class User {
     private _discardPile: PokemonCard[];
     private _currentPoints: number;
 
+    // num of hourglasses the user has
     private _hourglasses: number;
 
+    // constructor
     constructor(username: string, email: string, password: string) {
         this._password = password;
         this._email = email;
@@ -69,6 +76,7 @@ export class User {
         this._hourglasses = 0;
     }
 
+    // getters & setters
     get username(): string {
         return this._username;
     }
@@ -221,8 +229,10 @@ export class User {
         return this._hourglasses;
     }
 
+    // opens a boosterpack, defaults to 5 cards
     public openBoosterPack(cardsToOpen: number = 5): PokemonCard[] {
         const cardsByRarity: Record<number, PokemonCard[]> = {};
+        // sorts all the cards by rarity
         for (let rarity = 1; rarity <= 8; rarity++) {
             cardsByRarity[rarity] = ALL_CARDS.filter(
                 (card) => card.Rarity === rarity
@@ -256,13 +266,23 @@ export class User {
             },
         };
 
-        function adjustDropRates(slot: number) {
+        /**
+         * adjusts the droprate of the slot, done as some rarities are not implemented, eg crown rare, so rates are adjusted to fill in the gaps
+         * @param slot slot of droprate adjust
+         * @returns returns the droprates for that rarity
+         */
+        function adjustDropRates(slot: number): Record<number, number> {
+            // constants for the droprates
             const rates = dropRates[slot];
             const filteredRates: Record<number, number> = {};
+            // should add up to 100
             let totalRate = 0;
 
+            // rarity tiers
             const rarityTiers = Object.keys(rates);
 
+            // goes through the rarity tiers and finds available tiers
+            // ifrate is greater than 0, add its rate to filteredRates and increases totalRate
             for (let i = 0; i < rarityTiers.length; i++) {
                 const rarity = parseInt(rarityTiers[i]);
                 if (
@@ -274,7 +294,9 @@ export class User {
                     totalRate += rates[rarity];
                 }
             }
-
+            
+            // normalizes the drop rates, first divides the drop rate by total rate, and times it by 100, this way
+            // the card will always have its drop rates total to 100
             const filteredKeys = Object.keys(filteredRates);
             for (let i = 0; i < filteredKeys.length; i++) {
                 const dropRate = parseInt(filteredKeys[i]);
@@ -284,8 +306,17 @@ export class User {
             return filteredRates;
         }
 
+        
+        /**
+         * Selects a rarity tier based on adjusted drop rates for a given slot
+         * then generates a random number to determine which rarity is selected
+         *
+         * @param slot the slot the drop is being chosen from
+         * @returns the selected rarity as a number
+         */
         function pickRarity(slot: number): number {
             const rates = adjustDropRates(slot);
+            // randomly generates a number
             const randomNum = Math.random() * 100;
             let totalDropRate = 0;
             const rarityTiers = Object.keys(rates);
@@ -293,12 +324,19 @@ export class User {
                 const rarity = parseInt(rarityTiers[i]);
                 totalDropRate += rates[rarity];
                 if (randomNum <= totalDropRate) {
+                    // returns the rarity chosen
                     return rarity;
                 }
             }
             return 1;
         }
 
+        /**
+         * Returns the highest available rarity less than or equal to the specified rarity.
+         *
+         * @param rarity the starting rarity level to check from
+         * @returns highest rarity level available, defualts to 1 if none are found
+         */
         function getAvailableRarity(rarity: number): number {
             for (let r = rarity; r >= 1; r--) {
                 if (cardsByRarity[r] && cardsByRarity[r].length > 0) {
@@ -308,6 +346,11 @@ export class User {
             return 1;
         }
 
+        /**
+         * picks a card randomly from the rarity
+         * @param rarity the rarity given
+         * @returns returns a random pokemon card in that section
+         */
         function pickCardFromRarity(rarity: number): PokemonCard {
             const list = cardsByRarity[rarity];
             if (!list || list.length === 0) {
@@ -317,12 +360,14 @@ export class User {
             return list[randomCardLocation];
         }
 
+        // chance to roll a god pack is 0.05% or 1/2000
         const godPackRoll = Math.random();
         if (godPackRoll <= 0.0005) {
             for (let rarity = 8; rarity >= 1; rarity--) {
                 if (cardsByRarity[rarity] && cardsByRarity[rarity].length > 0) {
                     const godPackCards: PokemonCard[] = [];
                     for (let i = 0; i < 5; i++) {
+                        // only get the highest rarity of cards available
                         godPackCards.push(pickCardFromRarity(rarity));
                     }
                     return godPackCards;
@@ -332,6 +377,7 @@ export class User {
 
         const packCards: PokemonCard[] = [];
 
+        // push cards into the pack, using all the algorithems above
         for (let slot = 1; slot <= cardsToOpen; slot++) {
             const slotRatesKey = slot <= 3 ? 1 : slot;
             let rarity = pickRarity(slotRatesKey);
@@ -340,19 +386,27 @@ export class User {
             packCards.push(card);
         }
 
+        // adds the pack cards to the users collectiob
         this.addToCollection(packCards);
 
+        // returns the pack
         return packCards;
     }
 
+    /**
+     * adds the cards from the pack to the users collection
+     * @param cards cards to add as a pokemon card array
+     * @returns true if successfully added, false otherwise
+     */
     public addToCollection(cards: PokemonCard[]): boolean {
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
             let existingCard: PokemonCard | undefined;
-            for (const collectedCard of this._collection.keys()) {
-                console.log(this.areCardsEqual(collectedCard, card))
-                if (this.areCardsEqual(collectedCard, card)) {
-                    existingCard = collectedCard;
+            const collectionKeys = Array.from(this._collection.keys());
+            // adds 1 to the card count if the cards are the same
+            for (let i = 0; i < collectionKeys.length; i++) {
+                if (this.areCardsEqual(collectionKeys[i], card)) {
+                    existingCard = collectionKeys[i];
                     break;
                 }
             }
@@ -367,6 +421,12 @@ export class User {
         return true;
     }
 
+    /**
+     * checks if 2 cards are the same card
+     * @param card1 card 1 to check
+     * @param card2 card 2 to check
+     * @returns returns true if same, false else
+     */
     private areCardsEqual(card1: PokemonCard, card2: PokemonCard): boolean {
         return (
             card1.pokemonPhoto === card2.pokemonPhoto &&
@@ -383,6 +443,11 @@ export class User {
         );
     }
 
+    /**
+     * filters the users collection
+     * @param filters filters to apply
+     * @returns returns a filteres selection of the users cards
+     */
     public searchCollection(filters?: {
         name?: string;
         type?: string;
@@ -394,9 +459,12 @@ export class User {
         sortBy?: "name" | "rarity" | "hp" | "count";
         sortOrder?: "asc" | "desc";
     }): { card: PokemonCard; count: number }[] {
+        // pokemon cards
         const keys: PokemonCard[] = [];
+        // num of a certain card
         const values: number[] = [];
 
+        // iterates thru the current collection and pushes cards count and type into a object
         const currentIteration = this._collection.entries();
         let nextIteration = currentIteration.next();
         while (!nextIteration.done) {
@@ -406,8 +474,10 @@ export class User {
             nextIteration = currentIteration.next();
         }
 
+        // results of the push
         const results: { card: PokemonCard; count: number }[] = [];
 
+        // filtering the cards by types that is inputted by the user
         for (let i = 0; i < keys.length; i++) {
             const card = keys[i];
             const count = values[i];
@@ -420,7 +490,7 @@ export class User {
             ) {
                 continue;
             }
-
+            
             if (filters?.type && card.type !== filters.type) {
                 continue;
             }
@@ -446,9 +516,11 @@ export class User {
             results.push({ card, count });
         }
 
+        // sort filters to apply and sort the results of the initial filter
         if (filters?.sortBy) {
             const descending = filters.sortOrder === "desc";
 
+            // bubble sort the pokemon cards, the user dosen't have many unique types of pokemon cards, so bubble sort is effective and quick
             for (let j = 0; j < results.length - 1; j++) {
                 for (let k = 0; k < results.length - 1 - j; k++) {
                     const a = results[k];
@@ -527,16 +599,25 @@ export class User {
         return results;
     }
 
+    /**
+     * creates a deck
+     * @param name name of deck
+     * @param cards cards in the deck
+     * @param energyTypes energy type in the deck
+     * @returns returns the deck, or null if creation fails
+     */
     public createDeck(
         name: string,
         cards: { card: PokemonCard; count: number }[],
         energyTypes: string[] = []
     ): Deck | null {
+        // deck needs a name
         if (!name.trim()) {
             console.log("Deck name cannot be empty");
             return null;
         }
 
+        // deck cannot have 0 cards
         if (cards.length === 0) {
             console.log("Deck must contain at least 1 card");
             return null;
@@ -544,23 +625,27 @@ export class User {
 
         const newDeck = new Deck(name);
 
+        // adds cards to the deck
         for (let i = 0; i < cards.length; i++) {
             const { card, count } = cards[i];
 
             const available = this._collection.get(card) ?? 0;
             if (available < count) {
+                // console logs an error if the user does not have the amount of cards required to be added
                 console.log(
                     `Not enough ${card.pokemonName} (Need ${count}, have ${available})`
                 );
                 return null;
             }
 
+            // error if the card addition failed, debugging line
             if (!newDeck.addPokemonCard(card, count)) {
                 console.log(`Failed to add ${count}x ${card.pokemonName}`);
                 return null;
             }
         }
 
+        // adds energy type, error if invalid energy type
         for (let i = 0; i < energyTypes.length; i++) {
             if (!newDeck.addEnergyType(energyTypes[i])) {
                 console.log(`Invalid energy type: ${energyTypes[i]}`);
@@ -568,6 +653,7 @@ export class User {
             }
         }
 
+        // validates deck
         if (!newDeck.validate()) {
             console.log(
                 "Deck failed validation - check card counts/energy requirements"
@@ -575,13 +661,20 @@ export class User {
             return null;
         }
 
+        // pushes deck, console logs for debug
         this._decks.push(newDeck);
         console.log(`Created deck "${name}" with:
         - ${cards.reduce((sum, c) => sum + c.count, 0)} Pokemon cards
         - ${energyTypes.length} energy types`);
+        // returns the new deck
         return newDeck;
     }
 
+    /**
+     * deleats a deck
+     * @param deckName deck to deleat
+     * @returns true if deleated, false otherwise
+     */
     public deleteDeck(deckName: string): boolean {
         const index = this._decks.findIndex((deck) => deck.name === deckName);
         if (index === -1) {
@@ -591,16 +684,11 @@ export class User {
         return true;
     }
 
-    public drawCard(amt: number): PokemonCard {
-        // To be implemented
-        return {} as PokemonCard;
-    }
-
-    public playCard(card: PokemonCard): boolean {
-        // To be implemented
-        return false;
-    }
-
+    /**
+     * checks the player's active pokemon and bench for any pokemon cards with 0 HP
+     *
+     * @returns An array of pokemon cards that were discarded during this check
+     */
     public checkForDiscard(): PokemonCard[] {
         const discardedCards: PokemonCard[] = [];
 
@@ -626,6 +714,13 @@ export class User {
         return discardedCards;
     }
 
+    /**
+     * attach energy to pokemon
+     * @param pokemon pokemon to attach to
+     * @param energy type of energy
+     * @param amount amt of energy
+     * @returns 
+     */
     public attachEnergy(
         pokemon: PokemonCard,
         energy: string,
@@ -639,25 +734,12 @@ export class User {
         return true;
     }
 
-    public attack(
-        attacker: PokemonCard,
-        attack: Attack,
-        defender: PokemonCard
-    ): boolean {
-        // To be implemented
-        return false;
-    }
-
-    public retreat(pokemon: PokemonCard): boolean {
-        // To be implemented
-        return false;
-    }
-
-    public evolveCard(pokemon: PokemonCard): boolean {
-        // To be implemented
-        return false;
-    }
-
+    /**
+     * ends the game between 2 players
+     * @param player1 player 1
+     * @param player2 player 2
+     * @returns returns the winner if game does not draw, and sets endgame to true
+     */
     public endGame(
         player1: User,
         player2: User
@@ -681,11 +763,21 @@ export class User {
         return { endGame: false };
     }
 
+    /**
+     * discards the active deck, clears it from the users acitve deck slot
+     */
     public discardActiveDeck() {
         this._activeDeck = null;
         this._activeDeckName = null;
     }
 
+    /**
+     * updates the users profile
+     * @param newUsername 
+     * @param newPassword 
+     * @param newEmail 
+     * @returns returns true if updates, false otherwise
+     */
     public updateProfile(
         newUsername?: string,
         newPassword?: string,
@@ -768,14 +860,23 @@ export class User {
         };
     }
 
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     static fromJSON(json: any): User {
+        // creates a new user based on the json string data
         const user = new User(
             json._username ?? "",
             json._email ?? "",
             json._password ?? ""
         );
 
-        // Collection
+        // has alot of null checks, as typescript does not work wihtout these
         const collectionMap = new Map<PokemonCard, number>();
         if (Array.isArray(json._collection)) {
             for (const entry of json._collection) {
@@ -790,26 +891,22 @@ export class User {
         }
         user._collection = collectionMap;
 
-        // Decks
         user._decks = Array.isArray(json._decks)
             ? json._decks.map((deckData: any) => Deck.fromJSON(deckData ?? {}))
             : [];
 
-        // Game stats
         user._victories = Number(json._victories) || 0;
         user._gameStats = json._gameStats
             ? UserStats.fromJSON(json._gameStats)
             : new UserStats(0, 0, 0);
         user._winRate = Number(json._winRate) || 0;
 
-        // Game history
         user._gameHistory = Array.isArray(json._gameHistory)
             ? json._gameHistory.map((record: any) =>
                   GameRecord.fromJSON(record ?? {})
               )
             : [];
 
-        // Game state
         user._activeDeckName = json._activeDeckName ?? null;
         user._activeDeck = json._activeDeck
             ? Deck.fromJSON(json._activeDeck)
@@ -832,7 +929,6 @@ export class User {
             : [];
         user._currentPoints = Number(json._currentPoints) || 0;
 
-        // Currency
         user._hourglasses = Number(json._hourglasses) || 0;
 
         return user;

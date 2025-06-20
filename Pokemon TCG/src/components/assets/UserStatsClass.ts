@@ -1,8 +1,11 @@
+// users stats
 export class UserStats {
-    wins: number;
-    losses: number;
-    currentStreak: number;
+    // properties
+    private wins: number;
+    private losses: number;
+    private currentStreak: number;
 
+    // constructor
     constructor(
         wins: number = 0,
         losses: number = 0,
@@ -13,21 +16,31 @@ export class UserStats {
         this.currentStreak = currentStreak;
     }
 
+    // adds a win
     public addWin() {
         this.wins++;
         this.currentStreak += 1;
     }
 
+    // adds a loss
     public addLoss() {
         this.losses++;
         this.currentStreak = 0;
     }
 
+    // get WR
     public getWinPercentage(): number {
         const totalGames = this.wins + this.losses;
         return totalGames === 0 ? 0 : (this.wins / totalGames) * 100;
     }
 
+
+    /**
+     * serializes a array class into json string format
+     * used to store or transfer the data
+     * 
+     * @returns returns a plain JS object representing the current state of the class with its properties
+     */
     public toJSON() {
         return {
             wins: this.wins,
@@ -36,6 +49,14 @@ export class UserStats {
         };
     }
 
+    /**
+     * Recreates an instance from a json object
+     *
+     * deserializes a plain object, parsed from json
+     * into an instance by extracting its properties.
+     *
+     * @param {any} json - the json object containing all the properties of the ability class
+     */
     public static fromJSON(json: any): UserStats {
         return new UserStats(json.wins, json.losses, json.currentStreak);
     }
